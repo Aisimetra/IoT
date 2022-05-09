@@ -81,6 +81,15 @@ char query[256];
 char INSERT_SENSOR_DATA[] = "INSERT INTO `gmadotto1`.`sensors` (`temperature`, `humidity`,`real_temperature`, `light_value`, `rssi`) VALUES (%f,%f,%f,%d,%d)";
 char INSERT_ALERT_DATA[] = "INSERT INTO `gmadotto1`.`alerts` (`temperature_alert`,`humidity_alert`, `real_temperature_alert`, `light_value_alert`, `rssi_alert`) VALUES (%d,%d,%d,%d,%d)";
 
+//per pagina webserver
+#include <ESP8266WebServer.h>
+ESP8266WebServer server(80);   // HTTP server on port 80
+//static byte lastState = false;
+String AlarmState = "/ON";
+String sensorState = "/ON";
+bool lastState =true;
+bool sensor= true;
+bool alarm= true;
 
 void setup() {
   //setup serial
@@ -88,10 +97,20 @@ void setup() {
   Serial.println("### SETUP ###");
   //esp mode
   WiFi.mode(WIFI_STA);
-  
+
+  // per pagina web
+  server.on("/", handle_root);
+  server.on("/ON/ON", hand_on_on);
+  server.on("/OFF/ON", hand_off_on);
+  server.on("/ON/OFF", hand_on_off);
+  server.on("/OFF/OFF", hand_off_off);
+  server.onNotFound(handle_NotFound);
+  Serial.println(F("HTTP server started"));
+  server.begin();
+
   //init dht
   dht.begin();
-  
+
   //init light sensor
   pinMode(LIGHT_SENSOR_PIN, INPUT);
 
@@ -106,20 +125,7 @@ void setup() {
 
   digitalWrite(SENSOR_GRID_LED, is_sensor_grid_enabled);
   digitalWrite(ALERT_EVENTS_LED, is_alert_events_enabled);
-  /*
-  //init alert leds
-  pinMode(RSSI_ALERT_LED, OUTPUT);
-  pinMode(HUMIDITY_ALERT_LED, OUTPUT);
-  pinMode(TEMPERATURE_ALERT_LED, OUTPUT);
-  pinMode(REAL_TEMPERATURE_ALERT_LED, OUTPUT);
-  pinMode(LIGHT_ALERT_LED, OUTPUT);
-  
-  digitalWrite(RSSI_ALERT_LED, LOW);
-  digitalWrite(HUMIDITY_ALERT_LED, LOW);
-  digitalWrite(TEMPERATURE_ALERT_LED, LOW);
-  digitalWrite(REAL_TEMPERATURE_ALERT_LED, LOW);
-  digitalWrite(LIGHT_ALERT_LED, LOW);
-  */
+
   Serial.println("### END SETUP ###\n");
 }
 
@@ -127,7 +133,7 @@ void loop() {
   rssi = wifi();
 
   check_buttons();
-  
+
   if (WiFi.status() == WL_CONNECTED) {
 
     if(is_sensor_grid_enabled && counter == 2000)
@@ -139,18 +145,119 @@ void loop() {
     debug_print();
 
     check_db_connection();
-    
+
+    //dovrebbe essere giusto qua
+    server.handleClient();
+    //
     if(is_sensor_grid_enabled && counter == 2000)
       update_sensors_db();
     if(is_alert_events_enabled && counter == 2000)
       update_alerts_db();
   }
-  
+
   check_counter();
-  
+
   counter++;
   delay(1);
 }
+
+// modificare per la pagine HTML
+
+void handle_root() {
+  Serial.print(F("New Client with IP: "));
+  Serial.println(server.client().remoteIP().toString());
+  sensor=true;
+  alarm=true;
+  server.send(200, F("text/html"), SendHTML(sensor, alarm));
+}
+boolean hand_on_on() {
+  Serial.println(F("Sensor ON, Alarm ON"));
+  sensor=true;
+  alarm=true;
+  server.send(200, F("text/html"), SendHTML(sensor, alarm));
+  return lastState ;
+}
+boolean hand_off_on() {
+  Serial.println(F("Sensor OFF, Alarm ON"));
+  sensor=false;
+  alarm=true;
+  server.send(200, F("text/html"), SendHTML(sensor, alarm));
+  return lastState ;
+}
+boolean hand_on_off() {
+  Serial.println(F("Sensor ON, Alarm OFF"));
+  sensor=true;
+  alarm=false;
+  server.send(200, F("text/html"), SendHTML(sensor, alarm));
+  return lastState ;
+}
+boolean hand_off_off() {
+  Serial.println(F("Sensor OFF, Alarm OFF"));
+  sensor=false;
+  alarm=false;
+  server.send(200, F("text/html"), SendHTML(sensor, alarm));
+  return lastState;
+}
+void handle_NotFound() {
+  server.send(404, F("text/plain"), F("Not found"));
+}
+
+String SendHTML(bool sensor, bool alarm) {
+  String ptr = "<!DOCTYPE html> <html>\n";
+  ptr += "<head><meta http-equiv=\"refresh\" content=\"30\" name=\"viewport\" content=\"width=device-width, initial-scale=1.0, user-scalable=no\">\n";
+  ptr += "<title>Web LED Control</title>\n";
+  ptr += "<style>html { font-family: Helvetica; display: inline-block; margin: 0px auto; text-align: center;}\n";
+  ptr += "body{margin-top: 50px;} h1 {color: #444444;margin: 50px auto 30px;} h3 {color: #444444;margin-bottom: 50px;}\n";
+
+  ptr +=".container{display:flex; justify-content: center; gap: 40px}\n";
+  ptr += ".button {display: block;width: 80px;background-color: #1abc9c;border: none;color: white;padding: 13px 30px;text-decoration: none;font-size: 25px;margin: 0px auto 35px;cursor: pointer;border-radius: 4px;}\n";
+  ptr += ".button-on {background-color: #1abc9c;}\n";
+  ptr += ".button-on:active {background-color: #16a085;}\n";
+  ptr += ".button-off {background-color: #ff4133;}\n";
+  ptr += ".button-off:active {background-color: #d00000;}\n";
+
+  ptr += ".button-2 {display: block;width: 80px;background-color: #1abc9c;border: none;color: white;padding: 13px 30px;text-decoration: none;font-size: 25px;margin: 0px auto 35px;cursor: pointer;border-radius: 4px;}\n";
+  ptr += ".button-2-on {background-color: #1abc9c;}\n";
+  ptr += ".button-2-on:active {background-color: #16a085;}\n";
+  ptr += ".button-2-off {background-color: #ff4133;}\n";
+  ptr += ".button-2-off:active {background-color: #d00000;}\n";
+
+  ptr += "p {font-size: 14px;color: #888;margin-bottom: 10px;}\n";
+  ptr += "</style>\n";
+  ptr += "</head>\n";
+  ptr += "<body>\n";
+  ptr += "<h1>Control of the Monitoring System </h1>\n";
+  ptr += "<div class=\"container\"> \n";
+
+  if (sensor && alarm) {
+    sensorState = "/ON";
+    AlarmState =  "/ON";
+    ptr += "<div> <p>Current Sensors Status: ON</p><a class=\"button button-off\" href=\""+ sensorState+AlarmState + "\">OFF</a> </div> \n";
+    ptr += "<div><p>Current Alarm Status: ON</p><a class=\"button-2 button-2-off\" href=\""+  sensorState+AlarmState + "\">OFF</a> </div>\n";
+  } else if (sensor && (alarm == false)) {
+    sensorState = "/ON";
+    AlarmState =  "/OFF";
+    ptr += "<div> <p>Current Sensors Status: ON</p><a class=\"button button-off\" href=\""+  sensorState+AlarmState + "\">OFF</a> </div> \n";
+    ptr += "<div><p>Current Alarm Status: OFF</p><a class=\"button-2 button-2-off\" href=\""+  sensorState+AlarmState + "\">ON</a> </div>\n";
+  }  else if ((sensor ==false ) && alarm) {
+    sensorState = "/OFF";
+    AlarmState = "/ON";
+    ptr += "<div> <p>Current Sensors Status: OFF</p><a class=\"button button-off\" href=\""+  sensorState+AlarmState + "\">ON</a> </div> \n";
+    ptr += "<div><p>Current Alarm Status: ON</p><a class=\"button-2 button-2-off\" href=\""+  sensorState+AlarmState + "\">OFF</a> </div>\n";
+  } else {
+    AlarmState = "/OFF";
+    sensorState = "/OFF";
+    ptr += "<div> <p>Current Sensors Status: OFF</p><a class=\"button button-off\" href=\""+  sensorState+AlarmState + "\">ON</a> </div> \n";
+    ptr += "<div><p>Current Alarm Status: OFF</p><a class=\"button-2 button-2-off\" href=\""+  sensorState+AlarmState + "\">ON</a> </div>\n";
+  }
+
+  ptr+= "</div> \n";
+  ptr += "</body>\n";
+  ptr += "</html>\n";
+  return ptr;
+}
+
+
 int check_db_connection(){
   // connect to MySQL
   if (!conn.connected()) {
@@ -166,20 +273,15 @@ int check_db_connection(){
   return 1;
 }
 void check_buttons(){
-  if(is_sensor_button_pressed()){
+  if(sensor){
     is_sensor_grid_enabled = !is_sensor_grid_enabled;
-    digitalWrite(SENSOR_GRID_LED, is_sensor_grid_enabled);
+    //digitalWrite(SENSOR_GRID_LED, is_sensor_grid_enabled);
 
   }
-  if(is_alert_button_pressed()){
+  if(alarm){
     is_alert_events_enabled = !is_alert_events_enabled;
-    digitalWrite(ALERT_EVENTS_LED, is_alert_events_enabled);
+    //digitalWrite(ALERT_EVENTS_LED, is_alert_events_enabled);
   }
-}
-
-void check_counter(){
-  if(counter >= 2000)
-    counter = 0;
 }
 
 boolean is_sensor_button_pressed() {
@@ -195,16 +297,24 @@ boolean is_sensor_button_pressed() {
 }
 
 boolean is_alert_button_pressed() {
-  static byte lastState = digitalRead(ALERT_EVENTS_BUTTON);   // the previous reading from the input pin
+static byte lastState = digitalRead(ALERT_EVENTS_BUTTON);   // the previous reading from the input pin
 
-  for (byte count = 0; count < BUTTON_DEBOUNCE_DELAY; count++) {
+   for (byte count = 0; count < BUTTON_DEBOUNCE_DELAY; count++) {
     if (digitalRead(ALERT_EVENTS_BUTTON) == lastState) return false;
-    delay(1);
+      delay(1);
   }
 
-  lastState = !lastState;
-  return lastState == HIGH ? false : true;
+    lastState = !lastState;
+    return lastState == HIGH ? false : true;
 }
+
+
+void check_counter(){
+  if(counter >= 2000)
+    counter = 0;
+}
+
+
 void debug_print(){
   Serial.println(F("##### DEBUG PRINT #####"));
   Serial.println(F("=== WiFi connection status ==="));
@@ -217,7 +327,7 @@ void debug_print(){
   alert_events_status();
   Serial.println(F("=============================="));
   Serial.println(F("##### END DEBUG PRINT #####\n"));
-  
+
 }
 int connect_db(){
   Serial.println("=== DB STATUS ===");
@@ -320,11 +430,11 @@ void sensors_status(){
   // sensor grid
   Serial.print(F("sensor grid enabled: "));
   Serial.println(bool2str(is_sensor_grid_enabled));
-  
+
   // alerting
   Serial.print(F("alerting events enabled: "));
   Serial.println(bool2str(is_alert_events_enabled));
-  
+
   // humidity
   Serial.print(F("humidity: "));
   Serial.println(humidity);
@@ -379,7 +489,7 @@ long wifi() {
     }
     Serial.println(F("\nConnected!"));
     rssi_strength = WiFi.RSSI();
-    
+
   } else {
     rssi_strength = WiFi.RSSI();
   }
@@ -413,4 +523,3 @@ void wifi_status() {
   Serial.print(F("DNS IP: "));
   Serial.println(WiFi.dnsIP());
 }
-
