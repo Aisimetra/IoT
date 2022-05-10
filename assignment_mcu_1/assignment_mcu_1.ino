@@ -84,12 +84,6 @@ char INSERT_ALERT_DATA[] = "INSERT INTO `gmadotto1`.`alerts` (`temperature_alert
 //per pagina webserver
 #include <ESP8266WebServer.h>
 ESP8266WebServer server(80);   // HTTP server on port 80
-//static byte lastState = false;
-String AlarmState = "/ON";
-String sensorState = "/ON";
-bool lastState =true;
-bool sensor= true;
-bool alarm= true;
 
 void setup() {
   //setup serial
@@ -166,37 +160,40 @@ void loop() {
 void handle_root() {
   Serial.print(F("New Client with IP: "));
   Serial.println(server.client().remoteIP().toString());
-  sensor=true;
-  alarm=true;
-  server.send(200, F("text/html"), SendHTML(sensor, alarm));
+  //is_sensor_grid_enabled=true;
+  //is_alert_events_enabled=true;
+  digitalWrite(SENSOR_GRID_LED, is_sensor_grid_enabled);
+  digitalWrite(ALERT_EVENTS_LED, is_alert_events_enabled);
+  server.send(200, F("text/html"), SendHTML(is_sensor_grid_enabled, is_alert_events_enabled));
 }
 boolean hand_on_on() {
   Serial.println(F("Sensor ON, Alarm ON"));
-  sensor=true;
-  alarm=true;
-  server.send(200, F("text/html"), SendHTML(sensor, alarm));
-  return lastState ;
+  is_sensor_grid_enabled=true;
+  is_alert_events_enabled=true;
+  digitalWrite(SENSOR_GRID_LED, is_sensor_grid_enabled);
+  digitalWrite(ALERT_EVENTS_LED, is_alert_events_enabled);
+  server.send(200, F("text/html"), SendHTML(is_sensor_grid_enabled, is_alert_events_enabled));
 }
-boolean hand_off_on() {
-  Serial.println(F("Sensor OFF, Alarm ON"));
-  sensor=false;
-  alarm=true;
-  server.send(200, F("text/html"), SendHTML(sensor, alarm));
-  return lastState ;
+void hand_off_on() {
+  is_sensor_grid_enabled=false;
+  is_alert_events_enabled=true;
+  digitalWrite(SENSOR_GRID_LED, is_sensor_grid_enabled);
+  digitalWrite(ALERT_EVENTS_LED, is_alert_events_enabled);
+  server.send(200, F("text/html"), SendHTML(is_sensor_grid_enabled, is_alert_events_enabled));
 }
-boolean hand_on_off() {
-  Serial.println(F("Sensor ON, Alarm OFF"));
-  sensor=true;
-  alarm=false;
-  server.send(200, F("text/html"), SendHTML(sensor, alarm));
-  return lastState ;
+void hand_on_off() {
+  is_sensor_grid_enabled=true;
+  is_alert_events_enabled=false;
+  digitalWrite(SENSOR_GRID_LED, is_sensor_grid_enabled);
+  digitalWrite(ALERT_EVENTS_LED, is_alert_events_enabled);
+  server.send(200, F("text/html"), SendHTML(is_sensor_grid_enabled, is_alert_events_enabled));
 }
-boolean hand_off_off() {
-  Serial.println(F("Sensor OFF, Alarm OFF"));
-  sensor=false;
-  alarm=false;
-  server.send(200, F("text/html"), SendHTML(sensor, alarm));
-  return lastState;
+void hand_off_off() {
+  is_sensor_grid_enabled=false;
+  is_alert_events_enabled=false;
+  digitalWrite(SENSOR_GRID_LED, is_sensor_grid_enabled);
+  digitalWrite(ALERT_EVENTS_LED, is_alert_events_enabled);
+  server.send(200, F("text/html"), SendHTML(is_sensor_grid_enabled, is_alert_events_enabled));
 }
 void handle_NotFound() {
   server.send(404, F("text/plain"), F("Not found"));
@@ -210,13 +207,13 @@ String SendHTML(bool sensor, bool alarm) {
   ptr += "body{margin-top: 50px;} h1 {color: #444444;margin: 50px auto 30px;} h3 {color: #444444;margin-bottom: 50px;}\n";
 
   ptr +=".container{display:flex; justify-content: center; gap: 40px}\n";
-  ptr += ".button {display: block;width: 80px;background-color: #1abc9c;border: none;color: white;padding: 13px 30px;text-decoration: none;font-size: 25px;margin: 0px auto 35px;cursor: pointer;border-radius: 4px;}\n";
+  ptr += ".button {display: flex;justify-content: center;width: 80px;background-color: #1abc9c;border: none;color: white;padding: 13px 30px;text-decoration: none;font-size: 25px;margin: 0px auto 35px;cursor: pointer;border-radius: 4px;}\n";
   ptr += ".button-on {background-color: #1abc9c;}\n";
   ptr += ".button-on:active {background-color: #16a085;}\n";
   ptr += ".button-off {background-color: #ff4133;}\n";
   ptr += ".button-off:active {background-color: #d00000;}\n";
 
-  ptr += ".button-2 {display: block;width: 80px;background-color: #1abc9c;border: none;color: white;padding: 13px 30px;text-decoration: none;font-size: 25px;margin: 0px auto 35px;cursor: pointer;border-radius: 4px;}\n";
+  ptr += ".button-2 {display: flex;justify-content: center;width: 80px;background-color: #1abc9c;border: none;color: white;padding: 13px 30px;text-decoration: none;font-size: 25px;margin: 0px auto 35px;cursor: pointer;border-radius: 4px;}\n";
   ptr += ".button-2-on {background-color: #1abc9c;}\n";
   ptr += ".button-2-on:active {background-color: #16a085;}\n";
   ptr += ".button-2-off {background-color: #ff4133;}\n";
@@ -230,25 +227,17 @@ String SendHTML(bool sensor, bool alarm) {
   ptr += "<div class=\"container\"> \n";
 
   if (sensor && alarm) {
-    sensorState = "/ON";
-    AlarmState =  "/ON";
-    ptr += "<div> <p>Current Sensors Status: ON</p><a class=\"button button-off\" href=\""+ sensorState+AlarmState + "\">OFF</a> </div> \n";
-    ptr += "<div><p>Current Alarm Status: ON</p><a class=\"button-2 button-2-off\" href=\""+  sensorState+AlarmState + "\">OFF</a> </div>\n";
-  } else if (sensor && (alarm == false)) {
-    sensorState = "/ON";
-    AlarmState =  "/OFF";
-    ptr += "<div> <p>Current Sensors Status: ON</p><a class=\"button button-off\" href=\""+  sensorState+AlarmState + "\">OFF</a> </div> \n";
-    ptr += "<div><p>Current Alarm Status: OFF</p><a class=\"button-2 button-2-off\" href=\""+  sensorState+AlarmState + "\">ON</a> </div>\n";
-  }  else if ((sensor ==false ) && alarm) {
-    sensorState = "/OFF";
-    AlarmState = "/ON";
-    ptr += "<div> <p>Current Sensors Status: OFF</p><a class=\"button button-off\" href=\""+  sensorState+AlarmState + "\">ON</a> </div> \n";
-    ptr += "<div><p>Current Alarm Status: ON</p><a class=\"button-2 button-2-off\" href=\""+  sensorState+AlarmState + "\">OFF</a> </div>\n";
+    ptr += "<div> <p>Current Sensors Status: ON</p><a class=\"button button-on\" href=\"/OFF/ON\">DISABLE</a> </div> \n";
+    ptr += "<div><p>Current Alarm Status: ON</p><a class=\"button-2 button-2-on\" href=\"/ON/OFF\">DISABLE</a> </div>\n";
+  } else if (sensor && !alarm) {
+    ptr += "<div> <p>Current Sensors Status: ON</p><a class=\"button button-on\" href=\"/OFF/OFF\">DISABLE</a> </div> \n";
+    ptr += "<div><p>Current Alarm Status: OFF</p><a class=\"button-2 button-2-off\" href=\"/ON/ON\">ENABLE</a> </div>\n";
+  }  else if (!sensor && alarm) {
+    ptr += "<div> <p>Current Sensors Status: OFF</p><a class=\"button button-off\" href=\"/ON/ON\">ENABLE</a> </div> \n";
+    ptr += "<div><p>Current Alarm Status: ON</p><a class=\"button-2 button-2-on\" href=\"/OFF/OFF\">DISABLE</a> </div>\n";
   } else {
-    AlarmState = "/OFF";
-    sensorState = "/OFF";
-    ptr += "<div> <p>Current Sensors Status: OFF</p><a class=\"button button-off\" href=\""+  sensorState+AlarmState + "\">ON</a> </div> \n";
-    ptr += "<div><p>Current Alarm Status: OFF</p><a class=\"button-2 button-2-off\" href=\""+  sensorState+AlarmState + "\">ON</a> </div>\n";
+    ptr += "<div> <p>Current Sensors Status: OFF</p><a class=\"button button-off\" href=\"/ON/OFF\">ENABLE</a> </div> \n";
+    ptr += "<div><p>Current Alarm Status: OFF</p><a class=\"button-2 button-2-off\" href=\"/OFF/ON\">ENABLE</a> </div>\n";
   }
 
   ptr+= "</div> \n";
@@ -273,14 +262,15 @@ int check_db_connection(){
   return 1;
 }
 void check_buttons(){
-  if(sensor){
+  if(is_sensor_button_pressed()){
     is_sensor_grid_enabled = !is_sensor_grid_enabled;
-    //digitalWrite(SENSOR_GRID_LED, is_sensor_grid_enabled);
-
+    digitalWrite(SENSOR_GRID_LED, is_sensor_grid_enabled);
+    server.send(200, F("text/html"), SendHTML(is_sensor_grid_enabled, is_alert_events_enabled));
   }
-  if(alarm){
+  if(is_alert_button_pressed()){
     is_alert_events_enabled = !is_alert_events_enabled;
-    //digitalWrite(ALERT_EVENTS_LED, is_alert_events_enabled);
+    digitalWrite(ALERT_EVENTS_LED, is_alert_events_enabled);
+    server.send(200, F("text/html"), SendHTML(is_sensor_grid_enabled, is_alert_events_enabled));
   }
 }
 
