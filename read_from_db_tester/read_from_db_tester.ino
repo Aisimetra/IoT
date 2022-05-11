@@ -77,16 +77,20 @@ byte grad[8] = {
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
+  //lcd setup
   lcd.begin(16, 2);   // 16 cols, 2 rows
   lcd.createChar(6,  grad);
   lcd.setRGB(255, 255, 255);
   lcd.home();
   lcd.clear();
   lcd.print("setup");
+  
+  //setup dei led di alert
   pinMode(RSSI_ALERT_LED, OUTPUT);
   pinMode(HUMIDITY_ALERT_LED, OUTPUT);
   pinMode(TEMPERATURE_ALERT_LED, OUTPUT);
   pinMode(LIGHT_ALERT_LED, OUTPUT);
+  
   
   digitalWrite(RSSI_ALERT_LED, HIGH);
   digitalWrite(HUMIDITY_ALERT_LED, HIGH);
@@ -97,15 +101,17 @@ void setup() {
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
   if(check_timer()){
+	//check wifi
     connect_wifi("esp");
     if(WiFi.status() == WL_CONNECTED){
       debug_print();
+	  //connessione al db
       connect_db();
+	  //recupero i sensori dal db
       get_db_sensor_values();
       get_db_alert_values();
-    }
+    }+ì
     lcd_print();
     update_leds();
   }

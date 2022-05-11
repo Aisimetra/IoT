@@ -124,12 +124,15 @@ void setup() {
 }
 
 void loop() {
+  //controllo connessione wifi
   rssi = wifi();
-
+  
+  //controllo bottoni per sensori / allarmi
   check_buttons();
 
   if (WiFi.status() == WL_CONNECTED) {
-
+    
+	//aggiornamento sensori e allarmi
     if(is_sensor_grid_enabled && counter == 2000)
       update_sensor_values();
     if(is_alert_events_enabled && counter == 2000)
@@ -140,7 +143,6 @@ void loop() {
 
     check_db_connection();
 
-    //dovrebbe essere giusto qua
     server.handleClient();
     //
     if(is_sensor_grid_enabled && counter == 2000)
@@ -155,8 +157,7 @@ void loop() {
   delay(1);
 }
 
-// modificare per la pagine HTML
-
+//pagine web
 void handle_root() {
   Serial.print(F("New Client with IP: "));
   Serial.println(server.client().remoteIP().toString());
