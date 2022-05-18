@@ -16,6 +16,9 @@ long rssi = 0;
 #define DHT_PIN D3
 #define LIGHT_SENSOR_PIN A0
 
+#define DHT_TYPE DHT11   // sensor type DHT 11
+DHT dht = DHT(DHT_PIN, DHT_TYPE);
+
 //wifi setup
 char ssid[] = SECRET_SSID;
 char pass[] = SECRET_PASS;
@@ -36,10 +39,10 @@ bool is_subscribed_to_general = false;
 bool is_already_sub_to_topic = false;
 
 //timers
-int global_timer = 0;
-int max_global_timer = 40000;
-int sensors_timer = 10000;
-int connections_timer = 20000;
+int sensors_timer = 0;
+int sensors_timer_flag = 10000;
+int connections_timer = 0;
+int connections_timer_flag = 20000;
 
 void setup() {
   Serial.begin(115200);
@@ -50,7 +53,6 @@ void setup() {
   Serial.println("Connecting to wifi..");
   WiFi.mode(WIFI_STA);
   check_wifi();
-  printWifiStatus();
   
   // setup MQTT
   Serial.println("");
@@ -68,13 +70,76 @@ void setup() {
   Serial.println("light sensor");
   pinMode(LIGHT_SENSOR_PIN, INPUT);
   
-  Serial.println(F("=== Setup completed ==="));
+  Serial.println(F("=== Setup completed ===\n"));
 }
 void loop() {
-  check_wifi();   
-  checkMQTTBroker();
   mqttClient.loop();
+  if(connections_timer >= connections_timer_flag){
+    Serial.println(F("\nChecking if connections are ok.."));
+    check_wifi();   
+    checkMQTTBroker();
+    connections_timer = 0;
+  }
+  if(sensors_timer >= sensors_timer_flag){
+    update_sensor_values();
+    sensors_status();
+    publish_sensor_values();
+    sensors_timer = 0;
+  }
+  sensors_timer++;
+  connections_timer++;
   delay(1);
+}
+void publish_sensor_values(){
+  if(is_already_sub_to_topic){
+    Serial.print(F("pubblico dati dei sensori su ["));
+    Serial.print(MQTT_BOARD_TOPIC);
+    Serial.println(F("]"));
+    const int capacity = JSON_OBJECT_SIZE(256);
+    StaticJsonDocument<capacity> doc;
+    doc["id"] = "sensor_values_production";  
+    doc["temperature"] = temperature;
+    doc["real_temperature"] = real_temperature;
+    doc["humidity"] = humidity;
+    doc["light"] = light_level;
+    doc["rssi"] = rssi;
+    char buffer[256];
+    size_t sensors = serializeJson(doc, buffer);
+    mqttClient.publish(MQTT_BOARD_TOPIC, buffer, sensors);
+    //doc2["temperature"] = temperature;
+    //doc2["real_temperature"] = real_temperature;
+    //doc2["light"] = light_level;
+    //doc2["rssi"] = rssi;
+    //char buffer[128];
+    //size_t n = serializeJson(sensors, buffer);
+    //mqttClient.publish(topic, buffer, n);
+  }
+}
+void update_sensor_values(){
+  humidity = dht.readHumidity();
+  temperature = dht.readTemperature();
+  real_temperature = dht.computeHeatIndex(temperature, humidity, false);
+  light_level = analogRead(LIGHT_SENSOR_PIN);
+}
+
+void sensors_status(){
+  Serial.println(F(""));
+  Serial.println(F("SENSOR READINGS"));
+  // humidity
+  Serial.print(F("humidity: "));
+  Serial.println(humidity);
+
+  // temperature
+  Serial.print(F("temp: "));
+  Serial.println(temperature);
+
+  // real temperature
+  Serial.print(F("real temp: "));
+  Serial.println(real_temperature);
+
+  // light level
+  Serial.print(F("light: "));
+  Serial.println(light_level);
 }
 
 //ESP Reset

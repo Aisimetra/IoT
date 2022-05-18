@@ -10,7 +10,9 @@ void mqttMessageReceived(String &topic, String &payload) {
     if(id.equals("invite") && is_invited(mac)){
       Serial.println("Scheda invitata a connettersi");
       subscribe_to_topic(MQTT_BOARD_TOPIC);
+      is_already_sub_to_topic = true;
       Serial.println("Invio conferma iscrizione..");
+      //json di iscrizione
       const int capacity = JSON_OBJECT_SIZE(256);
       StaticJsonDocument<capacity> doc2;
       doc2["id"] = "confirm";
@@ -57,9 +59,6 @@ void check_subscriptions(){
     if(!is_subscribed_to_general){        
       subscribe_to_topic(MQTT_TOPIC_GENERIC);
       is_subscribed_to_general = true;
-    }
-    if(is_already_sub_to_topic){
-       subscribe_to_topic(MQTT_BOARD_TOPIC);
     }
   }
 }

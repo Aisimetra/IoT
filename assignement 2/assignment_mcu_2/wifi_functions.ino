@@ -41,7 +41,8 @@ void check_wifi() {
       counter++;
       
     }
+    Serial.println(F(""));
     printWifiStatus();
-    Serial.println(F("\nConnected!"));       
+    Serial.println(F("Connected!"));       
   }
 }
