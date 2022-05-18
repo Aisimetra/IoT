@@ -2,7 +2,7 @@
 
 // MQTT access
 #define MQTT_BROKERIP "149.132.178.180"           // IP address of the machine running the MQTT broker
-#define MQTT_CLIENTID "asarteschi16"                 // client identifier
+#define MQTT_CLIENTID "asarteschi16_mcu"                 // client identifier
 #define MQTT_USERNAME "asarteschi"            // mqtt user's name
 #define MQTT_PASSWORD "iot829677"            // mqtt user's password
 
