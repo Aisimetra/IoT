@@ -50,7 +50,7 @@ void loop() {
   const int capacity = JSON_OBJECT_SIZE(2);
   StaticJsonDocument<capacity> doc;
   doc["id"] = "sub_request";
-  doc["type"] = "sensor";
+  doc["type"] = "alarm";
 
    n = serializeJson(doc, buffer);
   Serial.print(F("JSON message: "));
