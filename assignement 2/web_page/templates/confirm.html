@@ -3,19 +3,23 @@
 <head>
     <meta http-equiv=\"refresh\" content=\"30\" name=\"viewport\" content=\"width=device-width, initial-scale=1.0,
           user-scalable=no\">
-    <title>Web LED Control</title>
+    <title>Setting</title>
     <style>html {font-family: Helvetica; display: inline-block; margin: 0px auto; text-align: center;}
-body{margin-top: 50px;} h1 {color: #444444;margin: 50px auto 30px;} h3 {color: #444444;margin-bottom: 50px;}
+           body{margin-top: 50px;} h1 {color: #444444;margin: 50px auto 30px;} h3 {color: #444444;margin-bottom: 50px;}
 
-
+     .button2 {display: flex;justify-content: center;width: 120px;background-color: #1abc9c;border: none;color: white;
+                padding: 13px 30px;text-decoration: none;font-size: 15px;margin: 0px auto 35px;cursor: pointer;border-radius: 4px;}";
     </style>
 </head>
 <body>
-<form action="/confirm" method="POST">
-    <h1>Node added succesfully</h1>
 
-    <a href='/'>
-        <button type="button"> Go Back</button>
-    </a></form>
+    <h1>Node added succesfully</h1>
+    <br><br>
+    <form action="/" >
+        <button class="button button2"  type="submit" > Add Another Sensor</button>
+    </form>
+ <form action="/sensor">
+    <button class="button button2"  type="submit"> Go to Sensor</button>
+   </form>
 </body>
 </html>
