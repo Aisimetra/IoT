@@ -9,19 +9,22 @@
            body{margin-top: 50px;} h1 {color: #444444;margin: 50px auto 30px;} h3 {color: #444444;margin-bottom: 50px;}
 
      .button2 {display: flex;justify-content: center;width: 120px;background-color: #1abc9c;border: none;color: white;
-                padding: 13px 30px;text-decoration: none;font-size: 15px;margin: 0px auto 35px;cursor: pointer;border-radius: 4px;}";
-.container{display:flex; justify-content: center; gap: 200px}
+                padding: 13px 30px;text-decoration: none;font-size: 15px;margin: 0px auto 35px;
+                cursor: pointer;border-radius: 4px;}
+     .container{display:flex; justify-content: center; gap: 20px}
     </style>
 </head>
 <body>
 <h1> Pagina dei sensori </h1>
-<div class=\"container\">
+
     <div class="container" align="left">
-        <canvas id="myChart" style="width:100%;max-width:600px">
+        <canvas id="myChart" style="width:100%;max-width:600px" >
         </canvas>
     </div>
-    <div class="container" align="left"> <canvas id="myChart2" style="width:100%;max-width:600px"></canvas></div>
-</div>
+    <div class="container" align="right">
+        <canvas id="myChart2" style="width:100%;max-width:600px " >
+        </canvas>
+    </div>
 
 <script>
 var xValues = [50,60,70,80,90,100,110,120,130,140,150];
@@ -40,6 +43,7 @@ new Chart("myChart", {
     }]
   },
   options: {
+
     legend: {display: false},
     scales: {
       yAxes: [{ticks: {min: 6, max:16}}],
