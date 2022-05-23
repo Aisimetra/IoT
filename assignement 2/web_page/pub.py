@@ -20,9 +20,16 @@ topic = "gmadotto1/general"
 client_id = f'python-mqtt-{random.randint(0, 1000)}'
 username = 'asarteschi'
 password = 'iot829677'
-global connected
-
 messages = []
+
+# My sql
+# da modificare
+app.config['MYSQL_HOST'] = '149.132.178.180'
+app.config['MYSQL_USER'] = 'asarteschi'
+app.config['MYSQL_PASSWORD'] = 'iot829677'
+app.config['MYSQL_DB'] = 'flask'
+
+mysql = MySQL(app)
 
 
 # HTML
@@ -64,28 +71,36 @@ def index_page():
 def hom_sens():
     # poi capisco come farlo
     topic = 'gmadotto1/production/low_priority'
+    # da sistemare
     connect_mqtt()
-
+    # da sistemare
+    pd()
+    # da sistemare
+    mysql_connection()
     return render_template('home_con_Sensori.html')
 
 
+def pd(last_dato):  # parsing divino
+    string_parse = json.loads(last_dato)
+    if string_parse['che topic è']: #
+        save = 'topic che indicherà dove salvare'
+        if string_parse['temperatura']:
+            salvo = 'inserisco la temperature'
+    print('passo poi a mysql')
 
 
+# @app.route('/login', methods = ['POST', 'GET'])
+def mysql_connection():
+    cursor = mysql.connection.cursor()
+    name = 89  # cose estatte con il parsing
+    # da inserire le query
+    cursor.execute(''' INSERT INTO info_table VALUES(%s,%s)''', (name, age))
 
+    # Saving the Actions performed on the DB
+    mysql.connection.commit()
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+    # Closing the cursor
+    cursor.close()
 
 
 @app.route('/sensor')
@@ -124,6 +139,7 @@ def subscribe(client: mqtt_client):
     def on_message(client, userdata, message):
         m = str(message.payload.decode("utf-8"))
         messages.append(m)
+        pd(m)
         if len(messages) == 2:
             conf = json.loads(messages[1])
             if conf['id'] == 'confirm':
