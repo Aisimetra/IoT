@@ -1,4 +1,6 @@
-// #### WIFI STUFF ####
+/*
+ * WIFI STUFF
+ */
 void printWifiStatus() {
 
   // print the SSID of the network you're attached to
@@ -21,6 +23,7 @@ void printWifiStatus() {
 void check_wifi() {
   if (WiFi.status() != WL_CONNECTED) {
     digitalWrite(CONNECTED_WIFI, HIGH);
+    digitalWrite(CONNECTED_MQTTX, HIGH);
     Serial.print(F("Connecting to SSID: "));
     Serial.println(ssid);
 
@@ -43,8 +46,10 @@ void check_wifi() {
       
     }
     Serial.println(F(""));
-    printWifiStatus();
-    Serial.println(F("Connected!"));       
+    
+           
   }
+  Serial.println(F("Connected to WIFI"));
+  printWifiStatus();
   digitalWrite(CONNECTED_WIFI, LOW);
 }

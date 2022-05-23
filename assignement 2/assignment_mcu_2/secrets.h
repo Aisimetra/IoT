@@ -2,9 +2,9 @@
 
 // MQTT access
 #define MQTT_BROKERIP "149.132.178.180"           // IP address of the machine running the MQTT broker
-#define MQTT_CLIENTID "asarteschi16"                 // client identifier
-#define MQTT_USERNAME "asarteschi"            // mqtt user's name
-#define MQTT_PASSWORD "iot829677"            // mqtt user's password
+#define MQTT_CLIENTID "gmadotto1_production"                 // client identifier
+#define MQTT_USERNAME "gmadotto1"            // mqtt user's name
+#define MQTT_PASSWORD "iot829783"            // mqtt user's password
 
 // WiFi configuration
 //#define SECRET_SSID "IoTLabThingsU14"                  // SSID
