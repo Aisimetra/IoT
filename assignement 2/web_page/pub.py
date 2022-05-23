@@ -2,7 +2,8 @@
 
 import random
 from paho.mqtt import client as mqtt_client
-from flask import Flask,render_template, request
+from flask import Flask, render_template, request
+import re
 
 # for flask
 app = Flask(__name__)
@@ -14,22 +15,30 @@ client_id = f'python-mqtt-{random.randint(0, 1000)}'
 username = 'asarteschi'
 password = 'iot829677'
 
+
 # HTML
 @app.route('/')
 def index():
     return render_template('index.html')
 
+
 @app.route('/confirm', methods=['POST'])
 def my_form_post():
     mac = request.form['slave']
-    processed_text = mac.upper()
-    client =  connect_mqtt()
+    mac_validation = bool(re.match('^' + '[\:\-]'.join(['([0-9a-f]{2})'] * 6) + '$', mac.lower()))
+    if not mac_validation:
+        return render_template('error.html')
+    client = connect_mqtt()
     publish(client, mac)
     return render_template('confirm.html')
 
 
+@app.route('/sensor')
+def sensor_page():
+    return render_template('sensor.html')
 
-#MQTT
+
+# MQTT
 def connect_mqtt():
     def on_connect(client, userdata, flags, rc):
         if rc == 0:
@@ -45,7 +54,7 @@ def connect_mqtt():
 
 
 def publish(client, mac):
-    msg = "{ \"id\":\"invite\", \"mac\":\""+ mac + "\"}"
+    msg = "{ \"id\":\"invite\", \"mac\":\"" + mac + "\"}"
     result = client.publish(topic, msg)
     status = result[0]
     if status == 0:
@@ -59,5 +68,5 @@ def run():
 
 
 if __name__ == '__main__':
-    #run()
+    # run()
     app.run(debug=True, host='127.0.0.1')
