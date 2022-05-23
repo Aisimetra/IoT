@@ -5,6 +5,9 @@
 #include <ArduinoJson.h>
 #include "secrets.h"
 
+#define CONNECTED_WIFI LED_BUILTIN     
+#define IS_POWERED LED_BUILTIN_AUX
+
 //variables
 float humidity = 0.0;
 float temperature = 0.0;
@@ -40,11 +43,18 @@ bool is_already_sub_to_topic = false;
 
 //timers
 int sensors_timer = 0;
-int sensors_timer_flag = 10000;
+int sensors_timer_flag = 30000;
 int connections_timer = 0;
-int connections_timer_flag = 20000;
+int connections_timer_flag = 30000;
 
 void setup() {
+
+  pinMode(IS_POWERED, OUTPUT);
+  pinMode(CONNECTED_WIFI, OUTPUT);
+
+  digitalWrite(IS_POWERED, LOW);
+  digitalWrite(CONNECTED_WIFI, HIGH);
+  
   Serial.begin(115200);
   delay(1000);
   Serial.println(F("\n=== Begin Setup ==="));
@@ -60,6 +70,8 @@ void setup() {
   mqttClient.begin(MQTT_BROKERIP, 1883, networkClient);   // setup communication with MQTT broker
   mqttClient.onMessage(mqttMessageReceived);
   checkMQTTBroker();
+
+  
   
   //setup sensors
   Serial.println("Setting up sensors..");
@@ -80,7 +92,7 @@ void loop() {
     checkMQTTBroker();
     connections_timer = 0;
   }
-  if(sensors_timer >= sensors_timer_flag){
+  if(sensors_timer >= sensors_timer_flag && WiFi.status() == WL_CONNECTED){
     update_sensor_values();
     sensors_status();
     publish_sensor_values();

@@ -20,6 +20,7 @@ void printWifiStatus() {
 
 void check_wifi() {
   if (WiFi.status() != WL_CONNECTED) {
+    digitalWrite(CONNECTED_WIFI, HIGH);
     Serial.print(F("Connecting to SSID: "));
     Serial.println(ssid);
 
@@ -45,4 +46,5 @@ void check_wifi() {
     printWifiStatus();
     Serial.println(F("Connected!"));       
   }
+  digitalWrite(CONNECTED_WIFI, LOW);
 }
