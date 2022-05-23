@@ -46,10 +46,12 @@ def my_form_post():
     subscribe(client)
     client.loop_start()
 
-    if len(messages) == 2 :
-        conf = json.loads(messages[1])
-        if conf['id'] == 'confirm':
-            print('funziona allora?')
+    # if len(messages) == 2 :
+    #     conf = json.loads(messages[1])
+    #     if conf['id'] == 'confirm' and conf['mac'] == '80:7D:3A:42:EF:6A':
+    #        title = 'stoccaggio'
+    #     else
+    #       title = 'produzione'
     return render_template('confirm.html', title="stoccaggio", conf="lo stoccaggio")
 
 
@@ -60,7 +62,30 @@ def index_page():
 
 @app.route('/home_con_Sensori')
 def hom_sens():
-    return render_template('home_con_Sensori.html', message="è presente solo il ")
+    # poi capisco come farlo
+    topic = 'gmadotto1/production/low_priority'
+    connect_mqtt()
+
+    return render_template('home_con_Sensori.html')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 @app.route('/sensor')
@@ -97,14 +122,14 @@ def publish(client, mac):
 
 def subscribe(client: mqtt_client):
     def on_message(client, userdata, message):
-        m = "message received  ", str(message.payload.decode("utf-8"))
+        m = str(message.payload.decode("utf-8"))
         messages.append(m)
-        #print("message received  ", message[0])
         if len(messages) == 2:
             conf = json.loads(messages[1])
             if conf['id'] == 'confirm':
-               print('funziona allora?')
-            client.loop_stop()
+                print('subscribe')
+            return client.loop_stop()
+
     client.subscribe(topic)
     client.on_message = on_message
 
