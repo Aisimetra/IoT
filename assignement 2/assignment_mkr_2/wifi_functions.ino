@@ -17,13 +17,14 @@ void printWifiStatus() {
   Serial.print(F("Signal strength (RSSI):"));
   Serial.print(rssi);
   Serial.println(F(" dBm"));
-  Serial.println(WiFi.macAddress());
+  Serial.println(MKR_MACADDR);
+  Serial.println();
 }
 
 void check_wifi() {
   if (WiFi.status() != WL_CONNECTED) {
-    digitalWrite(CONNECTED_WIFI, HIGH);
-    digitalWrite(CONNECTED_MQTTX, HIGH);
+    digitalWrite(CONNECTED_WIFI, LOW);
+    digitalWrite(CONNECTED_MQTTX, LOW);
     Serial.print(F("Connecting to SSID: "));
     Serial.println(ssid);
 
@@ -45,11 +46,10 @@ void check_wifi() {
       counter++;
       
     }
-    Serial.println(F(""));
-    
-           
+    Serial.println(F(""));     
   }
   Serial.println(F("Connected to WIFI"));
   printWifiStatus();
-  digitalWrite(CONNECTED_WIFI, LOW);
+  digitalWrite(CONNECTED_WIFI, HIGH);
 }
+

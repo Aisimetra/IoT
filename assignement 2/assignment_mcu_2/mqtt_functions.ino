@@ -11,9 +11,9 @@ void mqttMessageReceived(String &topic, String &payload) {
     String mac = doc["mac"];
     if(id.equalsIgnoreCase("invite")){
       if(is_invited(mac)){
-        Serial.println("Scheda invitata a connettersi");
-        subscribe_to_topic(MQTT_BOARD_TOPIC_LOW_PRIORITY);
-        subscribe_to_topic(MQTT_BOARD_TOPIC_HIGH_PRIORITY);
+        Serial.println("Scheda autorizzata a pubblicare");
+        //subscribe_to_topic(MQTT_BOARD_TOPIC_LOW_PRIORITY);
+        //subscribe_to_topic(MQTT_BOARD_TOPIC_HIGH_PRIORITY);
         is_already_sub_to_topic = true;
         Serial.println("Invio conferma iscrizione..");
         //json di iscrizione
@@ -21,6 +21,8 @@ void mqttMessageReceived(String &topic, String &payload) {
         StaticJsonDocument<capacity> doc2;
         doc2["id"] = "confirm";
         doc2["mac"] = mac;
+        doc2["topic_l"] = MQTT_BOARD_TOPIC_LOW_PRIORITY;
+        doc2["topic_h"] = MQTT_BOARD_TOPIC_HIGH_PRIORITY;
         char buffer[512];
         size_t n = serializeJson(doc2, buffer);
         mqttClient.publish(MQTT_TOPIC_GENERIC, buffer, n);

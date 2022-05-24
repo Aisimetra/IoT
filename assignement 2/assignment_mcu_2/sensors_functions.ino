@@ -8,12 +8,11 @@ void publish_sensor_values(){
     Serial.println(F("]"));
     const int capacity = JSON_OBJECT_SIZE(256);
     StaticJsonDocument<capacity> doc;
-    doc["node_type"] = "production";  
+    doc["id"] = "production";  
     doc["priority"] = "low";  
     doc["temperature"] = temperature;
     doc["real_temperature"] = real_temperature;
     doc["humidity"] = humidity;
-    doc["rssi"] = rssi;
     char buffer[256];
     size_t sensors = serializeJson(doc, buffer);
     mqttClient.publish(MQTT_BOARD_TOPIC_LOW_PRIORITY, buffer, sensors);
@@ -28,7 +27,7 @@ void publish_high_priority_sensor_values(){
     Serial.println(F("]"));
     const int capacity = JSON_OBJECT_SIZE(256);
     StaticJsonDocument<capacity> doc;
-    doc["node_type"] = "production";  
+    doc["id"] = "production";  
     doc["priority"] = "high";  
     doc["fire"] = fire_level;
     doc["proximity"] = proximity;
