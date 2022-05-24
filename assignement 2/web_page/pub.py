@@ -36,6 +36,7 @@ real_temperature = 0.0
 humidity = 0.0
 fire = 0
 proximity = 0
+rows = []
 
 
 # HTML
@@ -69,11 +70,11 @@ def index_page():
 
 @app.route('/home_con_Sensori')
 def hom_sens():
-    # ho già fatto la connection quidni ho i dati
-    # chiamo il parsing
-    pd()
-    # da sistemare
-    return render_template('home_con_Sensori.html')
+    alarm = my_sql_connection_select_high('production')
+    if alarm[0][1] == 'True':
+        return render_template('home_con_Sensori.html', label1="Incendio", badge="badge-danger")
+    else:
+        return render_template('home_con_Sensori.html', label1="Tranquillo", badge="badge-success")
 
 
 def pd(last_dato):  # parsing divino
@@ -131,7 +132,7 @@ def mysql_connection_insert_low(temperature, real_temperature, humidity):
 
 
 @app.route("/", methods=['GET', 'POST'])
-def mysql_connection_insert_high(str, flame, proximityy):
+def mysql_connection_insert_high(str, flame, proximity):
     with app.app_context():
         cursor = mysql.connection.cursor()
         if str == 'production':
@@ -144,6 +145,40 @@ def mysql_connection_insert_high(str, flame, proximityy):
             cursor.execute(query, [flame, proximity])
             mysql.connection.commit()
             cursor.close()
+
+
+@app.route("/", methods=['GET', 'POST'])
+def my_sql_connection_select_low():
+    with app.app_context():
+        cursor = mysql.connection.cursor()
+        cursor.execute('SELECT * FROM asarteschi.production_high ORDER BY id DESC LIMIT 1')
+        for row in cursor:
+            rows.append(row)
+        mysql.connection.commit()
+        cursor.close()
+        return rows
+
+
+@app.route("/", methods=['GET', 'POST'])
+def my_sql_connection_select_high(str):
+    with app.app_context():
+        cursor = mysql.connection.cursor()
+        if str == 'production':
+            cursor.execute('SELECT * FROM asarteschi.production_high ORDER BY id DESC LIMIT 1')
+            # appende l'ultima riga che trova e vado quindi a vedere quella per valutare se fare l'allarme
+            for row in cursor:
+                rows.append(row)
+            mysql.connection.commit()
+            cursor.close()
+            return rows
+        else:
+            cursor.execute('SELECT (flame, proximity) FROM asarteschi.storage_high ORDER BY id DESC LIMIT 1')
+            for row in cursor:
+                rows.append(row)
+            mysql.connection.commit()
+            cursor.close()
+            return rows
+
 
 @app.route('/sensor')
 def sensor_page():
