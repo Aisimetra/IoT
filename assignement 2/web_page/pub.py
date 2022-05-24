@@ -2,15 +2,16 @@
 
 import random
 import time
+from datetime import datetime
 from queue import Queue
 
 from paho.mqtt import client as mqtt_client
 from flask import Flask, render_template, request
 import re
 import json
+from flask_mysqldb import MySQL
 
 q = Queue()
-from flask_mysqldb import MySQL
 
 app = Flask(__name__)
 # for mqtt
@@ -27,9 +28,14 @@ messages = []
 app.config['MYSQL_HOST'] = '149.132.178.180'
 app.config['MYSQL_USER'] = 'asarteschi'
 app.config['MYSQL_PASSWORD'] = 'iot829677'
-app.config['MYSQL_DB'] = 'flask'
-
+app.config['MYSQL_DB'] = 'asarteschi'
+app.config['MYSQL_DATABASE_PORT'] = 3306
 mysql = MySQL(app)
+temperature = 0.0
+real_temperature = 0.0
+humidity = 0.0
+fire = False
+proximity = False
 
 
 # HTML
@@ -53,12 +59,6 @@ def my_form_post():
     subscribe(client)
     client.loop_start()
 
-    # if len(messages) == 2 :
-    #     conf = json.loads(messages[1])
-    #     if conf['id'] == 'confirm' and conf['mac'] == '80:7D:3A:42:EF:6A':
-    #        title = 'stoccaggio'
-    #     else
-    #       title = 'produzione'
     return render_template('confirm.html', title="stoccaggio", conf="lo stoccaggio")
 
 
@@ -69,38 +69,70 @@ def index_page():
 
 @app.route('/home_con_Sensori')
 def hom_sens():
-    # poi capisco come farlo
-    topic = 'gmadotto1/production/low_priority'
-    # da sistemare
-    connect_mqtt()
-    # da sistemare
+    # ho già fatto la connection quidni ho i dati
+    # chiamo il parsing
     pd()
     # da sistemare
-    mysql_connection()
     return render_template('home_con_Sensori.html')
 
 
 def pd(last_dato):  # parsing divino
     string_parse = json.loads(last_dato)
-    if string_parse['che topic è']: #
-        save = 'topic che indicherà dove salvare'
-        if string_parse['temperatura']:
-            salvo = 'inserisco la temperature'
-    print('passo poi a mysql')
+    if string_parse['id'] == 'production' and string_parse['priority'] == 'low':
+        temperature = str(string_parse['temperature'])
+        real_temperature = str(string_parse['real_temperature'])
+        humidity = str(string_parse['humidity'])
+        print('production low')
+        mysql_connection_insert(temperature,real_temperature,humidity)
+    elif string_parse['id'] == 'production' and string_parse['priority'] == 'high':
+        fire = string_parse['fire']
+        proximity = string_parse['proximity']
+        print('production high ')
+        mysql_connection_insert()
+    elif string_parse['id'] == 'storage' and string_parse['priority'] == 'high':
+        fire = string_parse['fire']
+        proximity = string_parse['proximity']
+        print('priority high ')
+        mysql_connection_insert()
+    else:
+        print('Si è rotto ')
 
 
-# @app.route('/login', methods = ['POST', 'GET'])
-def mysql_connection():
-    cursor = mysql.connection.cursor()
-    name = 89  # cose estatte con il parsing
-    # da inserire le query
-    cursor.execute(''' INSERT INTO info_table VALUES(%s,%s)''', (name, age))
+def subscribe(client: mqtt_client):
+    def on_message(client, userdata, message):
+        # print(f"Recived `{m}` from topic `{topic}`")
+        messages.append(str(message.payload.decode("utf-8")))
+        conf = json.loads(messages[-1])
 
-    # Saving the Actions performed on the DB
-    mysql.connection.commit()
+        if conf['id'] == 'confirm':
+            topic_l = conf['topic_l']
+            topic_h = conf['topic_h']
+            client.loop_start()
+            client.subscribe(topic_l)
+            client.subscribe(topic_h)
+            q = str(message.payload.decode("utf-8"))
+            print(' ' + q)
+        if len(messages) >= 2:
+            print(messages[-1])
+            pd(messages[-1])
+        return None
 
-    # Closing the cursor
-    cursor.close()
+    client.subscribe(topic)
+    client.on_message = on_message
+
+
+@app.route("/", methods=['GET','POST'])
+def mysql_connection_insert(temperature,real_temperature,humidity):
+    with app.app_context():
+        cursor = mysql.connection.cursor()
+    #if tipe == 'production' and priority == 'low':
+        cursor.execute(''' INSERT INTO asarteschi.production_low VALUES(%s,%s,%s,%s)''', (len(messages), temperature, real_temperature, humidity))
+    # elif tipe == 'production' and priority == 'high':
+    #     cursor.execute(''' INSERT INTO production_high VALUES(%d,%d)''', (fire, proximity))
+    # elif tipe == 'storage' and priority == 'high':
+    #     cursor.execute(''' INSERT INTO storage_high VALUES(%d,%d)''', (fire, proximity))
+        mysql.connection.commit()
+        cursor.close()
 
 
 @app.route('/sensor')
@@ -133,21 +165,6 @@ def publish(client, mac):
         print(f"Send `{msg}` to topic `{topic}`")
     else:
         print(f"Failed to send message to topic {topic}")
-
-
-def subscribe(client: mqtt_client):
-    def on_message(client, userdata, message):
-        m = str(message.payload.decode("utf-8"))
-        messages.append(m)
-        pd(m)
-        if len(messages) == 2:
-            conf = json.loads(messages[1])
-            if conf['id'] == 'confirm':
-                print('subscribe')
-            return client.loop_stop()
-
-    client.subscribe(topic)
-    client.on_message = on_message
 
 
 def run():
