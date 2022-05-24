@@ -21,6 +21,8 @@ void mqttMessageReceived(String &topic, String &payload) {
         StaticJsonDocument<capacity> doc2;
         doc2["id"] = "confirm";
         doc2["mac"] = mac;
+        doc2["topic_l"] = MQTT_BOARD_TOPIC_LOW_PRIORITY;
+        doc2["topic_h"] = MQTT_BOARD_TOPIC_HIGH_PRIORITY;
         char buffer[512];
         size_t n = serializeJson(doc2, buffer);
         mqttClient.publish(MQTT_TOPIC_GENERIC, buffer, n);
@@ -31,8 +33,8 @@ void mqttMessageReceived(String &topic, String &payload) {
     }
   }  
 }
-bool is_invited(String mac){
-  if(mac.equalsIgnoreCase(WiFi.macAddress()))
+bool is_invited(String mac){  
+  if(mac.equalsIgnoreCase(MKR_MACADDR))
     return true;
   return false;
 }
@@ -55,7 +57,7 @@ void checkMQTTBroker() {
     Serial.println(F(""));
     check_subscriptions();
   }
-  digitalWrite(CONNECTED_MQTTX, LOW);
+  digitalWrite(CONNECTED_MQTTX, HIGH);
   Serial.println(F("Connected to MQTT"));
 }
 void check_subscriptions(){

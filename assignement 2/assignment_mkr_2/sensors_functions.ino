@@ -18,6 +18,7 @@ boolean is_sensor_button_pressed() {
   lastState = !lastState;
   return lastState == HIGH ? false : true;
 } 
+/*
 void publish_sensor_values(){
   if(mqttClient.connected() && WiFi.status() == WL_CONNECTED && is_already_sub_to_topic){
     Serial.print(F("UPLOAD TO MQTT (LOW priority) on ["));
@@ -38,6 +39,7 @@ void publish_sensor_values(){
   else
     Serial.println(F("Failed to upload (not connected to MQTT or lost WIFI connection)"));
 }
+*/
 void publish_high_priority_sensor_values(){
   if(mqttClient.connected() && WiFi.status() == WL_CONNECTED && is_already_sub_to_topic){
     Serial.print(F("UPLOAD TO MQTT (HIGH priority) on ["));
@@ -88,6 +90,7 @@ void update_high_priority_sensors(){
   
       
 }
+/*
 void update_sensor_values(){
   humidity = dht.readHumidity();
   temperature = dht.readTemperature();
@@ -116,6 +119,7 @@ void sensors_status(){
   Serial.println(rssi);
 
 }
+*/
 void high_priority_sensors_status(){
   Serial.println(F(""));
   Serial.println(F("HIGH PRIORITY SENSOR READINGS"));

@@ -1,7 +1,7 @@
 //imports
 #include <WiFi101.h>
+#include <SPI.h>
 #include <MQTT.h>
-#include <DHT.h>
 #include <ArduinoJson.h>
 #include "secrets.h"
 
@@ -10,15 +10,16 @@
 
 
 //support leds
-#define CONNECTED_WIFI LED_BUILTIN  
-#define CONNECTED_MQTTX D9   
-#define IS_POWERED D8
+#define IS_POWERED LED_BUILTIN  
+#define CONNECTED_WIFI 0
+#define CONNECTED_MQTTX 1   
+
 
 
 //alarms led
-#define FIRE_LED D7
-#define PROXIMITY_LED D6
-#define IS_PROXIMITY_BUTTON_ENABLED_LED D5
+#define FIRE_LED 2
+#define PROXIMITY_LED 3
+#define IS_PROXIMITY_BUTTON_ENABLED_LED 4
 
 
 //variables
@@ -28,8 +29,8 @@ bool is_proximity_enabled = false;
 
 
 //input pins
-#define PROXIMITY_SENSOR_PIN D4
-#define BUTTON_PROXIMITY_ENABLER_PIN D3
+#define PROXIMITY_SENSOR_PIN 7
+#define BUTTON_PROXIMITY_ENABLER_PIN 6
 #define FIRE_SENSOR_PIN A0
 
 
@@ -54,6 +55,7 @@ WiFiClient networkClient;
 bool is_subscribed_to_general = false;
 bool is_already_sub_to_topic = false;
 
+String MKR_MACADDR = "F8:F0:05:ED:F5:DA";
 
 //timers
 int high_priority_sensors_timer = 0;
@@ -73,13 +75,13 @@ void setup() {
   pinMode(CONNECTED_MQTTX, OUTPUT);
   pinMode(FIRE_LED, OUTPUT);
   pinMode(PROXIMITY_LED, OUTPUT);
+  pinMode(9, OUTPUT);
   pinMode(IS_PROXIMITY_BUTTON_ENABLED_LED, OUTPUT);
 
   
   digitalWrite(IS_POWERED, HIGH);
-  //led builtin HIGH -> led down 
-  digitalWrite(CONNECTED_WIFI, HIGH);
-  digitalWrite(CONNECTED_MQTTX, HIGH);
+  digitalWrite(CONNECTED_WIFI, LOW);
+  digitalWrite(CONNECTED_MQTTX, LOW);
   digitalWrite(FIRE_LED, LOW);
   digitalWrite(PROXIMITY_LED, LOW);
   digitalWrite(IS_PROXIMITY_BUTTON_ENABLED_LED, LOW);
@@ -91,7 +93,6 @@ void setup() {
   
   //wifi
   Serial.println(F("Connecting to wifi.."));
-  WiFi.mode(WIFI_STA);
   check_wifi();
   
   // setup MQTT
@@ -137,7 +138,9 @@ void loop() {
 
 //ESP Reset
 void soft_reset() { 
-  NVIC_SystemReset();
+  //NVIC_SystemReset();
+  digitalWrite(9, HIGH);
+  
 }
 String bool2str(bool value){
   if(value)
