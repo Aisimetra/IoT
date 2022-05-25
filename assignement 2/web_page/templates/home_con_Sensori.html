@@ -3,89 +3,71 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="A web interface for MQTT over Websockets">
-    <meta name="author" content="Fabian Affolter">
-
-    <title>Home conditions</title>
+<!--    <meta http-equiv="refresh" content="5">-->
+    <title>Stazione di Controllo Vigna 2.0</title>
 
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.2/mqttws31.js"></script>
+    <style>
+        html {font-family: Helvetica; display: inline-block; margin: 0px auto; text-align: center;}
+        .badge-success{font-size: 15px;padding: 10px 20px;}
+        .badge-danger{font-size: 15px;padding: 10px 20px;}
+    </style>
 
-    <script type="text/javascript" src="js/index.js"></script>
+
 </head>
-<body>
+<body id="pera">
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-2">
-        <a class="navbar-brand col-md-3 col-lg-2 mr-0 px-3" href="#">Home conditions</a>
+        <a class="navbar-brand col-md-3 col-lg-2 mr-0 px-3" href="#">Stazione di Controllo Vigna 2.0</a>
     </nav>
-    <div class="container-fluid">
-        <div id="status" class="alert">
-            <small>Loading...</small>
-        </div>
-        <div class="card mb-2">
-            <div class="row">
+    <div class="container-fluid" align="center">
+
+        <div class="card mb-2" >
+            <div class="row" >
                 <div class="col-6 col-md-4">
                     <div class="card-body">
-                        <div class="card-title">
-                            Flame
+                        <div class="card-title" >
+                            Incendio nella Produzione
                         </div>
-                        <span id="label1" class="badge {{badge}}">{{label1}}</span>
+                        <span id="label1" class="badge {{badge1}}" >{{label1}}</span>
                     </div>
                 </div>
-                <div class="col-6 col-md-4">
-                    <div class="card-body">
+                <div class="col-6 col-md-4" >
+                    <div class="card-body" >
                         <div class="card-title">
-                            Back door
+                            Allarme Intrusi nello Stoccaggio
                         </div>
-                        <span id="label2" class="badge w-100">Unknown</span>
+                        <span id="label2" class="badge {{badge2}}">{{label2}}</span>
                     </div>
                 </div>
                 <div class="col-12 col-md-4">
                     <div class="card-body">
                         <div class="card-title">
-                            Basement temperature
+                            Incendio nello Stoccaggio
                         </div>
-                        <span id="basementTempLabel" class="badge w-100">Unknown</span>
+                        <span id="basementTempLabel" class="badge {{badge3}}">{{label3}}</span>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="row">
-            <div class="col-12 col-md-7 mb-2">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="card-title">
-                            Living room temperature
-                            <span id="livingTempLabel" class="text-muted float-right badge">Unknown</span>
-                        </div>
-                    </div>
-                    <canvas id="tempChart" width="300" height="120"></canvas>
-                </div>
-            </div>
-            <div class="col-12 col-md-5">
-                <table class="table table-bordered table-sm table-striped mt-2">                    
+            <div class="col-12 col-md-7 mb-2" align="center">
+            <div class="col-12 col-md-5" align="center">
+                <h3>Sensori Produzione</h3>
+                <table class="table table-bordered table-sm table-striped mt-2" align="center">
                     <tbody>
                         <tr>
-                            <th>Entrance</th>
-                            <td><small id="value1">(no value received)</small></td>
+                            <th>Temperatura</th>
+                            <td><small id="temp">{{temp_v}} °C</small></td>
                         </tr>
                         <tr>
-                            <th>Back door</th>
-                            <td><small id="value2">(no value received)</small></td>
+                            <th>Temperatura percepita</th>
+                            <td><small id="real_temp">{{real_temp_v}} °C</small></td>
                         </tr>
                         <tr>
-                            <th>Basement temperature</th>
-                            <td><small id="basementTempLabel">(no value received)</small></td>
+                            <th>Umidità</th>
+                            <td><small id="hum">{{hum_v}} %</small></td>
                         </tr>
-                        <tr>
-                            <th>Living room temperature</th>
-                            <td><small id="livingTempSensor">(no value received)</small></td>
-                        </tr>
-                        <tr>
-                            <th>Last MQTT message</th>
-                            <td><small id="message">no message recieved</small></td>
-                        </tr>
+
                     </tbody>
                 </table>
             </div>
@@ -93,8 +75,15 @@
         <hr>
     </div>
 
-<script>
-
+<script src="http://code.jquery.com/jquery-3.1.1.js"></script>
+<script type="text/javascript">
+    function doRefresh(){
+        $("#pera").load("");
+    }
+    $(function() {
+        setInterval(doRefresh, 1000);
+    });
 </script>
 </body>
+
 </html>
