@@ -55,15 +55,16 @@ IPAddress gateway(GATEWAY);
 MQTTClient mqttClient(MQTT_BUFFER_SIZE);   // handles the MQTT communication protocol
 WiFiClient networkClient;
 #define MQTT_TOPIC_GENERIC "gmadotto1/general"
-#define MQTT_BOARD_TOPIC_LOW_PRIORITY "gmadotto1/production/low_priority"
-#define MQTT_BOARD_TOPIC_HIGH_PRIORITY "gmadotto1/production/high_priority"
+#define MQTT_BOARD_TOPIC "gmadotto1/data"
+//#define MQTT_BOARD_TOPIC_LOW_PRIORITY "gmadotto1/production/low_priority"
+//#define MQTT_BOARD_TOPIC_HIGH_PRIORITY "gmadotto1/production/high_priority"
 bool is_subscribed_to_general = false;
 bool is_already_sub_to_topic = false;
 
 
 //timers
 int low_priority_sensors_timer = 0;
-int low_priority_sensors_timer_flag = 30000;
+int low_priority_sensors_timer_flag = 10000;
 
 int high_priority_sensors_timer = 0;
 int high_priority_sensors_timer_flag = 5000;

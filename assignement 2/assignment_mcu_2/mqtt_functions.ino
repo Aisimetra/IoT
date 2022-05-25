@@ -21,8 +21,9 @@ void mqttMessageReceived(String &topic, String &payload) {
         StaticJsonDocument<capacity> doc2;
         doc2["id"] = "confirm";
         doc2["mac"] = mac;
-        doc2["topic_l"] = MQTT_BOARD_TOPIC_LOW_PRIORITY;
-        doc2["topic_h"] = MQTT_BOARD_TOPIC_HIGH_PRIORITY;
+        doc2["topic"] = MQTT_BOARD_TOPIC;
+        //doc2["topic_l"] = MQTT_BOARD_TOPIC_LOW_PRIORITY;
+        //doc2["topic_h"] = MQTT_BOARD_TOPIC_HIGH_PRIORITY;
         char buffer[512];
         size_t n = serializeJson(doc2, buffer);
         mqttClient.publish(MQTT_TOPIC_GENERIC, buffer, n);
@@ -65,8 +66,8 @@ void check_subscriptions(){
     //subscription check
     subscribe_to_topic(MQTT_TOPIC_GENERIC);
     if(is_already_sub_to_topic){
-      subscribe_to_topic(MQTT_BOARD_TOPIC_LOW_PRIORITY);
-      subscribe_to_topic(MQTT_BOARD_TOPIC_HIGH_PRIORITY);
+      //subscribe_to_topic(MQTT_BOARD_TOPIC_LOW_PRIORITY);
+      //subscribe_to_topic(MQTT_BOARD_TOPIC_HIGH_PRIORITY);
     }
       
   }
