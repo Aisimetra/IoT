@@ -34,8 +34,9 @@ mysql = MySQL(app)
 temperature = 0.0
 real_temperature = 0.0
 humidity = 0.0
-fire = False
-proximity = False
+fire = 0
+proximity = 0
+rows = []
 
 
 # HTML
@@ -69,11 +70,47 @@ def index_page():
 
 @app.route('/home_con_Sensori')
 def hom_sens():
-    # ho già fatto la connection quidni ho i dati
-    # chiamo il parsing
-    pd()
-    # da sistemare
-    return render_template('home_con_Sensori.html')
+    alarm_prod = my_sql_connection_select_high_production()
+    alarm_storage = my_sql_connection_select_high_storage()
+    storage = my_sql_connection_select_low()
+    print('prossimità storage ' + alarm_storage[-2][2])
+    print(alarm_storage)
+    print(storage)
+    print('temeratura' + storage[-1][1])
+    print('percepita ' + storage[-1][2])
+    print('umidità ' + storage[-1][3])
+    # p incendio s intruso s incendio
+    if alarm_prod[-3][1] == 'True' and alarm_storage[-2][2] == 'True' and alarm_storage[-2][1] == 'True':
+        return render_template('home_con_Sensori.html', label1="Incendio",  badge1="badge-danger", label2="Intruso", badge2="badge-danger", label3="Incendio",  badge3="badge-danger",
+                               temp_v= storage[-1][1], real_temp_v = storage[-1][2], hum_v= storage[-1][3])
+    # p tranquillo s intruso s incendio
+    elif alarm_prod[-3][1] == 'False' and alarm_storage[-2][2] == 'True' and alarm_storage[-2][1] == 'True' :
+        return render_template('home_con_Sensori.html', label1="Tranquillo", badge1="badge-success", label2="Intruso", badge2="badge-danger", label3="Incendio",  badge3="badge-danger",
+                               temp_v= storage[-1][1], real_temp_v = storage[-1][2], hum_v= storage[-1][3])
+    # p incendio s intruso s tranquillo
+    elif alarm_prod[-3][1] == 'True' and alarm_storage[-2][2] == 'True' and alarm_storage[-2][1] == 'False':
+        return render_template('home_con_Sensori.html', label1="Incendio", badge1="badge-danger",  label2="Intruso", badge2="badge-danger", label3="Tranquillo",  badge3="badge-success",
+                               temp_v= storage[-1][1], real_temp_v = storage[-1][2], hum_v= storage[-1][3])
+    # p tranquillo s no intruso s incendio
+    elif alarm_prod[-3][1] == 'False' and alarm_storage[-2][2] == 'False' and alarm_storage[-2][1] == 'True':
+        return render_template('home_con_Sensori.html', label1="Tranquillo", badge1="badge-success", label2="Nessun Intruso", badge2="badge-success", label3="Incendio",  badge3="badge-danger",
+                               temp_v= storage[-1][1], real_temp_v = storage[-1][2], hum_v= storage[-1][3])
+    # p incendio s no intruso s tranquillo
+    elif alarm_prod[-3][1] == 'True' and alarm_storage[-2][2] == 'False' and alarm_storage[-2][1] == 'False':
+        return render_template('home_con_Sensori.html', label1="Incendio", badge1="badge-danger",  label2="Nessun Intruso", badge2="badge-success", label3="Tranquillo",  badge3="badge-success",
+                               temp_v= storage[-1][1], real_temp_v = storage[-1][2], hum_v= storage[-1][3])
+    # p tranquillo s intruso s tranquillo
+    elif alarm_prod[-3][1] == 'False' and alarm_storage[-2][2] == 'True' and alarm_storage[-2][1] == 'False':
+        return render_template('home_con_Sensori.html', label1="Tranquillo", badge1="badge-success",  label2="Intruso", badge2="badge-danger", label3="Tranquillo",  badge3="badge-success",
+                               temp_v= storage[-1][1], real_temp_v = storage[-1][2], hum_v= storage[-1][3])
+    # p incendio s no intruso s incendio
+    elif alarm_prod[-3][1] == 'True' and alarm_storage[-2][2] == 'False' and alarm_storage[-2][1] == 'True':
+        return render_template('home_con_Sensori.html', label1="Incendio", badge1="badge-danger",  label2="Nessun Intruso", badge2="badge-success", label3="Incendio",  badge3="badge-danger",
+                               temp_v= storage[-1][1], real_temp_v = storage[-1][2], hum_v= storage[-1][3])
+    # p tranquillo s tranquillo s tranquillo
+    else:
+        return render_template('home_con_Sensori.html', label1="Tranquillo", badge1="badge-success",  label2="Nessun Intruso", badge2="badge-success", label3="Tranquillo",  badge3="badge-success",
+                               temp_v= storage[-1][1], real_temp_v = storage[-1][2], hum_v= storage[-1][3])
 
 
 def pd(last_dato):  # parsing divino
@@ -83,17 +120,17 @@ def pd(last_dato):  # parsing divino
         real_temperature = str(string_parse['real_temperature'])
         humidity = str(string_parse['humidity'])
         print('production low')
-        mysql_connection_insert(temperature,real_temperature,humidity)
+        mysql_connection_insert_low(temperature, real_temperature, humidity)
     elif string_parse['id'] == 'production' and string_parse['priority'] == 'high':
-        fire = string_parse['fire']
-        proximity = string_parse['proximity']
+        fire = str(string_parse['fire'])
+        proximity = str(string_parse['proximity'])
         print('production high ')
-        mysql_connection_insert()
+        mysql_connection_insert_high('production', fire, proximity)
     elif string_parse['id'] == 'storage' and string_parse['priority'] == 'high':
-        fire = string_parse['fire']
-        proximity = string_parse['proximity']
+        fire = str(string_parse['fire'])
+        proximity = str(string_parse['proximity'])
         print('priority high ')
-        mysql_connection_insert()
+        mysql_connection_insert_high('storage', fire, proximity)
     else:
         print('Si è rotto ')
 
@@ -103,7 +140,6 @@ def subscribe(client: mqtt_client):
         # print(f"Recived `{m}` from topic `{topic}`")
         messages.append(str(message.payload.decode("utf-8")))
         conf = json.loads(messages[-1])
-
         if conf['id'] == 'confirm':
             topic_l = conf['topic_l']
             topic_h = conf['topic_h']
@@ -115,25 +151,72 @@ def subscribe(client: mqtt_client):
         if len(messages) >= 2:
             print(messages[-1])
             pd(messages[-1])
-        return None
+
 
     client.subscribe(topic)
     client.on_message = on_message
 
 
-@app.route("/", methods=['GET','POST'])
-def mysql_connection_insert(temperature,real_temperature,humidity):
+@app.route("/", methods=['GET', 'POST'])
+def mysql_connection_insert_low(temperature, real_temperature, humidity):
     with app.app_context():
         cursor = mysql.connection.cursor()
-    #if tipe == 'production' and priority == 'low':
-        cursor.execute(''' INSERT INTO asarteschi.production_low VALUES(%s,%s,%s,%s)''', (len(messages), temperature, real_temperature, humidity))
-    # elif tipe == 'production' and priority == 'high':
-    #     cursor.execute(''' INSERT INTO production_high VALUES(%d,%d)''', (fire, proximity))
-    # elif tipe == 'storage' and priority == 'high':
-    #     cursor.execute(''' INSERT INTO storage_high VALUES(%d,%d)''', (fire, proximity))
+        query = 'INSERT INTO asarteschi.production_low (temperature, real_temperature, humidity) VALUES (%s,%s,%s)'
+        cursor.execute(query, [temperature, real_temperature, humidity])
         mysql.connection.commit()
         cursor.close()
 
+
+@app.route("/", methods=['GET', 'POST'])
+def mysql_connection_insert_high(str, flame, proximity):
+    with app.app_context():
+        cursor = mysql.connection.cursor()
+        if str == 'production':
+            query = 'INSERT INTO asarteschi.production_high (flame, proximity) VALUES (%s,%s)'
+            cursor.execute(query, [flame, proximity])
+            mysql.connection.commit()
+            cursor.close()
+        elif str == 'storage':
+            query = 'INSERT INTO asarteschi.storage_high (flame, proximity) VALUES (%s,%s)'
+            cursor.execute(query, [flame, proximity])
+            mysql.connection.commit()
+            cursor.close()
+
+
+@app.route("/", methods=['GET', 'POST'])
+def my_sql_connection_select_low():
+    with app.app_context():
+        cursor = mysql.connection.cursor()
+        cursor.execute('SELECT * FROM asarteschi.production_low ORDER BY id DESC LIMIT 1')
+        for row in cursor:
+            rows.append(row)
+        mysql.connection.commit()
+        cursor.close()
+        return rows
+
+
+@app.route("/", methods=['GET', 'POST'])
+def my_sql_connection_select_high_production():
+    with app.app_context():
+        cursor = mysql.connection.cursor()
+        cursor.execute('SELECT * FROM asarteschi.production_high ORDER BY id DESC LIMIT 1')
+        for row in cursor:
+            rows.append(row)
+        mysql.connection.commit()
+        cursor.close()
+        return rows
+
+
+@app.route("/", methods=['GET', 'POST'])
+def my_sql_connection_select_high_storage():
+    with app.app_context():
+        cursor = mysql.connection.cursor()
+        cursor.execute('SELECT * FROM asarteschi.storage_high ORDER BY id DESC LIMIT 1')
+        for row in cursor:
+            rows.append(row)
+        mysql.connection.commit()
+        cursor.close()
+        return rows
 
 @app.route('/sensor')
 def sensor_page():
