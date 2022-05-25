@@ -47,7 +47,7 @@ void publish_high_priority_sensor_values(){
     Serial.println(F("]"));
     const int capacity = JSON_OBJECT_SIZE(256);
     StaticJsonDocument<capacity> doc;
-    doc["node_type"] = "production";  
+    doc["id"] = "storage";  
     doc["priority"] = "high";  
     doc["fire"] = fire_level;
     doc["proximity"] = proximity;
@@ -71,10 +71,9 @@ void update_high_priority_sensors(){
     fire_level = false;
   }
       
-  if(is_proximity_enabled){
-    
-    
-    if(proximity){
+  if(is_proximity_enabled){  
+    //Il sensore va al contrario
+    if(!proximity){
     digitalWrite(PROXIMITY_LED, HIGH);
     proximity = true;
     }  

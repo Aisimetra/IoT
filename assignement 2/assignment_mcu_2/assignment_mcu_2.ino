@@ -9,12 +9,12 @@
 //support leds
 #define CONNECTED_WIFI LED_BUILTIN  
 #define CONNECTED_MQTTX LED_BUILTIN_AUX   
-#define IS_POWERED D8
+#define IS_POWERED D1
 
 
 //alarms led
-#define FIRE_LED D7
-#define PROXIMITY_LED D6
+#define FIRE_LED D8
+//#define PROXIMITY_LED D6
 
 
 //variables
@@ -25,9 +25,11 @@ bool fire_level = false;
 long rssi = 0;
 bool proximity = false;
 
+bool previous_fire_state = false;
+
 
 //input pins
-#define PROXIMITY_SENSOR_PIN D5
+//#define PROXIMITY_SENSOR_PIN D5
 #define DHT_PIN D3
 #define FIRE_SENSOR_PIN A0
 
@@ -79,7 +81,7 @@ void setup() {
   pinMode(CONNECTED_WIFI, OUTPUT);
   pinMode(CONNECTED_MQTTX, OUTPUT);
   pinMode(FIRE_LED, OUTPUT);
-  pinMode(PROXIMITY_LED, OUTPUT);
+  //pinMode(PROXIMITY_LED, OUTPUT);
 
   
   digitalWrite(IS_POWERED, HIGH);
@@ -87,7 +89,7 @@ void setup() {
   digitalWrite(CONNECTED_WIFI, HIGH);
   digitalWrite(CONNECTED_MQTTX, HIGH);
   digitalWrite(FIRE_LED, LOW);
-  digitalWrite(PROXIMITY_LED, LOW);
+  //digitalWrite(PROXIMITY_LED, LOW);
 
   
   
@@ -115,7 +117,7 @@ void setup() {
   Serial.println(F("DTH11"));
   //proximity
   Serial.println(F("Proximity sensor"));
-  pinMode(PROXIMITY_SENSOR_PIN, INPUT);
+  //pinMode(PROXIMITY_SENSOR_PIN, INPUT);
   Serial.println(F("=== Setup completed ===\n"));
 }
 /*
@@ -137,14 +139,22 @@ void loop() {
     publish_sensor_values();
     low_priority_sensors_timer = 0;
   }
+  /*
   if(high_priority_sensors_timer >= high_priority_sensors_timer_flag && WiFi.status() == WL_CONNECTED){
-    update_high_priority_sensors();
-    high_priority_sensors_status();
-    publish_high_priority_sensor_values();
+    //update_high_priority_sensors();
+    //high_priority_sensors_status();
+    //publish_high_priority_sensor_values();
     high_priority_sensors_timer = 0;
   }
-  
-  high_priority_sensors_timer++;
+  */
+  if(previous_fire_state != fire_level && WiFi.status() == WL_CONNECTED){
+    high_priority_sensors_status();
+    previous_fire_state = fire_level;
+    //previous_proximity_state = proximity;
+    publish_high_priority_sensor_values();
+    delay(500);
+  }
+  //high_priority_sensors_timer++;
   low_priority_sensors_timer++;
   connections_timer++;
   delay(1);

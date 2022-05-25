@@ -13,7 +13,7 @@
 #define IS_POWERED LED_BUILTIN  
 #define CONNECTED_WIFI 0
 #define CONNECTED_MQTTX 1   
-
+ 
 
 
 //alarms led
@@ -27,6 +27,8 @@ bool fire_level = false;
 bool proximity = false;
 bool is_proximity_enabled = false;
 
+bool previous_fire_state = false;
+bool previous_proximity_state = false;
 
 //input pins
 #define PROXIMITY_SENSOR_PIN 7
@@ -75,7 +77,6 @@ void setup() {
   pinMode(CONNECTED_MQTTX, OUTPUT);
   pinMode(FIRE_LED, OUTPUT);
   pinMode(PROXIMITY_LED, OUTPUT);
-  pinMode(9, OUTPUT);
   pinMode(IS_PROXIMITY_BUTTON_ENABLED_LED, OUTPUT);
 
   
@@ -116,6 +117,7 @@ void setup() {
  */
 void loop() {
   check_buttons();
+  update_high_priority_sensors();
   if(connections_timer >= connections_timer_flag){
     Serial.println(F("\nChecking if connections are ok.."));
     check_wifi();   
@@ -124,14 +126,22 @@ void loop() {
   }
   
   mqttClient.loop();
+  /*
   if(high_priority_sensors_timer >= high_priority_sensors_timer_flag && WiFi.status() == WL_CONNECTED){
-    update_high_priority_sensors();
-    high_priority_sensors_status();
-    publish_high_priority_sensor_values();
+    
+    //
     high_priority_sensors_timer = 0;
   }
+  */
+  if((previous_fire_state != fire_level || previous_proximity_state != proximity) && WiFi.status() == WL_CONNECTED){
+    high_priority_sensors_status();
+    previous_fire_state = fire_level;
+    previous_proximity_state = proximity;
+    publish_high_priority_sensor_values();
+    delay(500);
+  }
   
-  high_priority_sensors_timer++;
+  //high_priority_sensors_timer++;
   connections_timer++;
   delay(1);
 }
@@ -139,8 +149,6 @@ void loop() {
 //ESP Reset
 void soft_reset() { 
   //NVIC_SystemReset();
-  digitalWrite(9, HIGH);
-  
 }
 String bool2str(bool value){
   if(value)
