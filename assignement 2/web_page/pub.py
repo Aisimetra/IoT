@@ -18,6 +18,7 @@ app = Flask(__name__)
 broker = '149.132.178.180'
 port = 1883
 topic = "gmadotto1/general"
+topic_data = "gmadotto1/data"
 client_id = f'python-mqtt-{random.randint(0, 1000)}'
 username = 'asarteschi'
 password = 'iot829677'
@@ -146,19 +147,35 @@ def pd(last_dato):  # parsing divino
         print('Si è rotto ')
 
 
-def subscribe(client: mqtt_client):
-    def on_message(client, userdata, message):
-        messages.append(str(message.payload.decode("utf-8")))
-        conf = json.loads(messages[-1])
-        print(topic)
-        if len(messages) >= 3:
-            print(messages[-1])
-            pd(messages[-1]) #######
+# def subscribe(client: mqtt_client):
+#     def on_message(client, userdata, message):
+#         # print(f"Recived `{m}` from topic `{topic}`")
+#         messages.append(str(message.payload.decode("utf-8")))
+#         conf = json.loads(messages[-1])
+#         if len(messages) >= 3:
+#             print(messages[-1])
+#             pd(messages[-1])
+#         elif conf['id'] == 'confirm':
+#             topic = "gmadotto1/data"
+#             client.loop_start()
+#             client.subscribe(topic)
+#     topic = "gmadotto1/data"
+#     client.subscribe(topic)
+#     client.on_message = on_message
 
-    topic = "gmadotto1/data"
-    client.loop_start()
+
+def subscribe(client: mqtt_client):
+    def on_message(client, userdata, msg):
+        print(f"Received `{msg.payload.decode()}` from `{msg.topic}` topic")
+        messages.append(str(msg.payload.decode("utf-8")))
+        conf = json.loads(messages[-1])
+        print(messages[-1])
+        pd(messages[-1])
+
     client.subscribe(topic)
+    client.subscribe(topic_data)
     client.on_message = on_message
+
 
 
 @app.route("/", methods=['GET', 'POST'])
