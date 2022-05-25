@@ -47,16 +47,15 @@ def index():
 
 @app.route('/confirm', methods=['POST'])
 def my_form_post():
-    mac = request.form['slave']
-    prod = request.form.get("Prod")
-    stoc = request.form.get("Stoc")
+    mac = request.form['slave'] # sopra
+    mac2 = request.form['slave2'] # sotto
     mac_validation = bool(re.match('^' + '[\:\-]'.join(['([0-9a-f]{2})'] * 6) + '$', mac.lower()))
 
     if not mac_validation:
         return render_template('error.html', utc_dt="L'indirizzo MAC inserito è errato ")
 
     client = connect_mqtt()
-    publish(client, mac)
+    publish(client, mac, mac2)
     subscribe(client)
     client.loop_start()
 
@@ -81,36 +80,48 @@ def hom_sens():
     print('umidità ' + storage[-1][3])
     # p incendio s intruso s incendio
     if alarm_prod[-3][1] == 'True' and alarm_storage[-2][2] == 'True' and alarm_storage[-2][1] == 'True':
-        return render_template('home_con_Sensori.html', label1="Incendio",  badge1="badge-danger", label2="Intruso", badge2="badge-danger", label3="Incendio",  badge3="badge-danger",
-                               temp_v= storage[-1][1], real_temp_v = storage[-1][2], hum_v= storage[-1][3])
+        return render_template('home_con_Sensori.html', label1="Incendio", badge1="badge-danger", label2="Intruso",
+                               badge2="badge-danger", label3="Incendio", badge3="badge-danger",
+                               temp_v=storage[-1][1], real_temp_v=storage[-1][2], hum_v=storage[-1][3])
     # p tranquillo s intruso s incendio
-    elif alarm_prod[-3][1] == 'False' and alarm_storage[-2][2] == 'True' and alarm_storage[-2][1] == 'True' :
-        return render_template('home_con_Sensori.html', label1="Tranquillo", badge1="badge-success", label2="Intruso", badge2="badge-danger", label3="Incendio",  badge3="badge-danger",
-                               temp_v= storage[-1][1], real_temp_v = storage[-1][2], hum_v= storage[-1][3])
+    elif alarm_prod[-3][1] == 'False' and alarm_storage[-2][2] == 'True' and alarm_storage[-2][1] == 'True':
+        return render_template('home_con_Sensori.html', label1="Tranquillo", badge1="badge-success", label2="Intruso",
+                               badge2="badge-danger", label3="Incendio", badge3="badge-danger",
+                               temp_v=storage[-1][1], real_temp_v=storage[-1][2], hum_v=storage[-1][3])
     # p incendio s intruso s tranquillo
     elif alarm_prod[-3][1] == 'True' and alarm_storage[-2][2] == 'True' and alarm_storage[-2][1] == 'False':
-        return render_template('home_con_Sensori.html', label1="Incendio", badge1="badge-danger",  label2="Intruso", badge2="badge-danger", label3="Tranquillo",  badge3="badge-success",
-                               temp_v= storage[-1][1], real_temp_v = storage[-1][2], hum_v= storage[-1][3])
+        return render_template('home_con_Sensori.html', label1="Incendio", badge1="badge-danger", label2="Intruso",
+                               badge2="badge-danger", label3="Tranquillo", badge3="badge-success",
+                               temp_v=storage[-1][1], real_temp_v=storage[-1][2], hum_v=storage[-1][3])
     # p tranquillo s no intruso s incendio
     elif alarm_prod[-3][1] == 'False' and alarm_storage[-2][2] == 'False' and alarm_storage[-2][1] == 'True':
-        return render_template('home_con_Sensori.html', label1="Tranquillo", badge1="badge-success", label2="Nessun Intruso", badge2="badge-success", label3="Incendio",  badge3="badge-danger",
-                               temp_v= storage[-1][1], real_temp_v = storage[-1][2], hum_v= storage[-1][3])
+        return render_template('home_con_Sensori.html', label1="Tranquillo", badge1="badge-success",
+                               label2="Nessun Intruso", badge2="badge-success", label3="Incendio",
+                               badge3="badge-danger",
+                               temp_v=storage[-1][1], real_temp_v=storage[-1][2], hum_v=storage[-1][3])
     # p incendio s no intruso s tranquillo
     elif alarm_prod[-3][1] == 'True' and alarm_storage[-2][2] == 'False' and alarm_storage[-2][1] == 'False':
-        return render_template('home_con_Sensori.html', label1="Incendio", badge1="badge-danger",  label2="Nessun Intruso", badge2="badge-success", label3="Tranquillo",  badge3="badge-success",
-                               temp_v= storage[-1][1], real_temp_v = storage[-1][2], hum_v= storage[-1][3])
+        return render_template('home_con_Sensori.html', label1="Incendio", badge1="badge-danger",
+                               label2="Nessun Intruso", badge2="badge-success", label3="Tranquillo",
+                               badge3="badge-success",
+                               temp_v=storage[-1][1], real_temp_v=storage[-1][2], hum_v=storage[-1][3])
     # p tranquillo s intruso s tranquillo
     elif alarm_prod[-3][1] == 'False' and alarm_storage[-2][2] == 'True' and alarm_storage[-2][1] == 'False':
-        return render_template('home_con_Sensori.html', label1="Tranquillo", badge1="badge-success",  label2="Intruso", badge2="badge-danger", label3="Tranquillo",  badge3="badge-success",
-                               temp_v= storage[-1][1], real_temp_v = storage[-1][2], hum_v= storage[-1][3])
+        return render_template('home_con_Sensori.html', label1="Tranquillo", badge1="badge-success", label2="Intruso",
+                               badge2="badge-danger", label3="Tranquillo", badge3="badge-success",
+                               temp_v=storage[-1][1], real_temp_v=storage[-1][2], hum_v=storage[-1][3])
     # p incendio s no intruso s incendio
     elif alarm_prod[-3][1] == 'True' and alarm_storage[-2][2] == 'False' and alarm_storage[-2][1] == 'True':
-        return render_template('home_con_Sensori.html', label1="Incendio", badge1="badge-danger",  label2="Nessun Intruso", badge2="badge-success", label3="Incendio",  badge3="badge-danger",
-                               temp_v= storage[-1][1], real_temp_v = storage[-1][2], hum_v= storage[-1][3])
+        return render_template('home_con_Sensori.html', label1="Incendio", badge1="badge-danger",
+                               label2="Nessun Intruso", badge2="badge-success", label3="Incendio",
+                               badge3="badge-danger",
+                               temp_v=storage[-1][1], real_temp_v=storage[-1][2], hum_v=storage[-1][3])
     # p tranquillo s tranquillo s tranquillo
     else:
-        return render_template('home_con_Sensori.html', label1="Tranquillo", badge1="badge-success",  label2="Nessun Intruso", badge2="badge-success", label3="Tranquillo",  badge3="badge-success",
-                               temp_v= storage[-1][1], real_temp_v = storage[-1][2], hum_v= storage[-1][3])
+        return render_template('home_con_Sensori.html', label1="Tranquillo", badge1="badge-success",
+                               label2="Nessun Intruso", badge2="badge-success", label3="Tranquillo",
+                               badge3="badge-success",
+                               temp_v=storage[-1][1], real_temp_v=storage[-1][2], hum_v=storage[-1][3])
 
 
 def pd(last_dato):  # parsing divino
@@ -137,22 +148,15 @@ def pd(last_dato):  # parsing divino
 
 def subscribe(client: mqtt_client):
     def on_message(client, userdata, message):
-        # print(f"Recived `{m}` from topic `{topic}`")
         messages.append(str(message.payload.decode("utf-8")))
         conf = json.loads(messages[-1])
-        if conf['id'] == 'confirm':
-            topic_l = conf['topic_l']
-            topic_h = conf['topic_h']
-            client.loop_start()
-            client.subscribe(topic_l)
-            client.subscribe(topic_h)
-            q = str(message.payload.decode("utf-8"))
-            print(' ' + q)
-        if len(messages) >= 2:
+        print(topic)
+        if len(messages) >= 3:
             print(messages[-1])
-            pd(messages[-1])
+            pd(messages[-1]) #######
 
-
+    topic = "gmadotto1/data"
+    client.loop_start()
     client.subscribe(topic)
     client.on_message = on_message
 
@@ -218,6 +222,7 @@ def my_sql_connection_select_high_storage():
         cursor.close()
         return rows
 
+
 @app.route('/sensor')
 def sensor_page():
     return render_template('sensor.html')
@@ -229,6 +234,7 @@ def connect_mqtt() -> mqtt_client:
         if rc == 0:
             connected = True
             print("Connected to MQTT Broker!")
+
         else:
             connected = False
             print("Failed to connect, return code %d\n", rc)
@@ -240,12 +246,16 @@ def connect_mqtt() -> mqtt_client:
     return client
 
 
-def publish(client, mac):
+def publish(client, mac, mac2):
     msg = json.dumps({"id": "invite", "mac": mac}, sort_keys=True, indent=4)
+    msg2 = json.dumps({"id": "invite", "mac": mac2}, sort_keys=True, indent=4)
+
     result = client.publish(topic, msg)
+    result = client.publish(topic, msg2)
     status = result[0]
     if status == 0:
         print(f"Send `{msg}` to topic `{topic}`")
+        print(f"Send `{msg2}` to topic `{topic}`")
     else:
         print(f"Failed to send message to topic {topic}")
 
