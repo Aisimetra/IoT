@@ -43,7 +43,7 @@ void publish_sensor_values(){
 void publish_high_priority_sensor_values(){
   if(mqttClient.connected() && WiFi.status() == WL_CONNECTED && is_already_sub_to_topic){
     Serial.print(F("UPLOAD TO MQTT (HIGH priority) on ["));
-    Serial.print(MQTT_BOARD_TOPIC_HIGH_PRIORITY);
+    Serial.print(MQTT_BOARD_TOPIC);
     Serial.println(F("]"));
     const int capacity = JSON_OBJECT_SIZE(256);
     StaticJsonDocument<capacity> doc;
@@ -53,7 +53,7 @@ void publish_high_priority_sensor_values(){
     doc["proximity"] = proximity;
     char buffer[256];
     size_t sensors = serializeJson(doc, buffer);
-    mqttClient.publish(MQTT_BOARD_TOPIC_HIGH_PRIORITY, buffer, sensors);
+    mqttClient.publish(MQTT_BOARD_TOPIC, buffer, sensors);
   }
   else
     Serial.println(F("Failed to upload (not connected to MQTT or lost WIFI connection)"));
