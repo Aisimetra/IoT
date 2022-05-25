@@ -12,8 +12,8 @@ void mqttMessageReceived(String &topic, String &payload) {
     if(id.equalsIgnoreCase("invite")){
       if(is_invited(mac)){
         Serial.println("Scheda invitata a connettersi");
-        subscribe_to_topic(MQTT_BOARD_TOPIC_LOW_PRIORITY);
-        subscribe_to_topic(MQTT_BOARD_TOPIC_HIGH_PRIORITY);
+        //subscribe_to_topic(MQTT_BOARD_TOPIC_LOW_PRIORITY);
+        //subscribe_to_topic(MQTT_BOARD_TOPIC_HIGH_PRIORITY);
         is_already_sub_to_topic = true;
         Serial.println("Invio conferma iscrizione..");
         //json di iscrizione

@@ -40,7 +40,7 @@ void check_wifi() {
         Serial.println("");
       if(counter >= 250){
         Serial.println("failed to connect, restarting the device");
-        soft_reset();
+        counter = 0;
       }
       delay(250);
       counter++;

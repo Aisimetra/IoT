@@ -30,7 +30,7 @@ void publish_high_priority_sensor_values(){
     doc["id"] = "production";  
     doc["priority"] = "high";  
     doc["fire"] = fire_level;
-    doc["proximity"] = proximity;
+    //doc["proximity"] = proximity;
     char buffer[256];
     size_t sensors = serializeJson(doc, buffer);
     mqttClient.publish(MQTT_BOARD_TOPIC_HIGH_PRIORITY, buffer, sensors);
@@ -39,7 +39,7 @@ void publish_high_priority_sensor_values(){
     Serial.println(F("Failed to upload (not connected to MQTT or lost WIFI connection)"));
 }
 void update_high_priority_sensors(){
-  proximity = digitalRead(PROXIMITY_SENSOR_PIN);
+  //proximity = digitalRead(PROXIMITY_SENSOR_PIN);
   int fire = analogRead(FIRE_SENSOR_PIN);
   
   if(fire < 250){
@@ -51,7 +51,7 @@ void update_high_priority_sensors(){
     fire_level = false;
   }
       
-
+/*
   if(proximity){
     digitalWrite(PROXIMITY_LED, HIGH);
     proximity = true;
@@ -60,7 +60,7 @@ void update_high_priority_sensors(){
     digitalWrite(PROXIMITY_LED, LOW);
     proximity = false;
   }
-      
+      */
 }
 void update_sensor_values(){
   humidity = dht.readHumidity();
