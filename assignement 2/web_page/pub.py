@@ -147,22 +147,6 @@ def pd(last_dato):  # parsing divino
         print('Si è rotto ')
 
 
-# def subscribe(client: mqtt_client):
-#     def on_message(client, userdata, message):
-#         # print(f"Recived `{m}` from topic `{topic}`")
-#         messages.append(str(message.payload.decode("utf-8")))
-#         conf = json.loads(messages[-1])
-#         if len(messages) >= 3:
-#             print(messages[-1])
-#             pd(messages[-1])
-#         elif conf['id'] == 'confirm':
-#             topic = "gmadotto1/data"
-#             client.loop_start()
-#             client.subscribe(topic)
-#     topic = "gmadotto1/data"
-#     client.subscribe(topic)
-#     client.on_message = on_message
-
 
 def subscribe(client: mqtt_client):
     def on_message(client, userdata, msg):
