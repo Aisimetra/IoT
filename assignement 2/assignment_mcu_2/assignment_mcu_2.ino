@@ -140,14 +140,14 @@ void loop() {
     publish_sensor_values();
     low_priority_sensors_timer = 0;
   }
-  /*
+  
   if(high_priority_sensors_timer >= high_priority_sensors_timer_flag && WiFi.status() == WL_CONNECTED){
-    //update_high_priority_sensors();
-    //high_priority_sensors_status();
-    //publish_high_priority_sensor_values();
+    update_high_priority_sensors();
+    high_priority_sensors_status();
+    publish_high_priority_sensor_values();
     high_priority_sensors_timer = 0;
   }
-  */
+  
   if(previous_fire_state != fire_level && WiFi.status() == WL_CONNECTED){
     high_priority_sensors_status();
     previous_fire_state = fire_level;
@@ -170,4 +170,3 @@ String bool2str(bool value){
     return "TRUE";
   return "FALSE";
 }
-
