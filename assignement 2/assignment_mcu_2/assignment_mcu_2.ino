@@ -13,7 +13,7 @@
 
 
 //alarms led
-#define FIRE_LED D8
+#define FIRE_LED D2
 //#define PROXIMITY_LED D6
 
 
@@ -21,7 +21,7 @@
 float humidity = 0.0;
 float temperature = 0.0;
 float real_temperature = 0.0;
-bool fire_level = false;
+bool fire_level = true;
 long rssi = 0;
 bool proximity = false;
 
@@ -133,7 +133,7 @@ void loop() {
   }
   
   mqttClient.loop();
-  update_high_priority_sensors();
+  //update_high_priority_sensors();
   if(low_priority_sensors_timer >= low_priority_sensors_timer_flag && WiFi.status() == WL_CONNECTED){
     update_sensor_values();
     sensors_status();
@@ -141,21 +141,21 @@ void loop() {
     low_priority_sensors_timer = 0;
   }
 //  
-//  if(high_priority_sensors_timer >= high_priority_sensors_timer_flag && WiFi.status() == WL_CONNECTED){
-//    update_high_priority_sensors();
-//    high_priority_sensors_status();
-//    publish_high_priority_sensor_values();
-//    high_priority_sensors_timer = 0;
-//  }
-  
-  if(previous_fire_state != fire_level && WiFi.status() == WL_CONNECTED){
+  if(high_priority_sensors_timer >= high_priority_sensors_timer_flag && WiFi.status() == WL_CONNECTED){
+    update_high_priority_sensors();
     high_priority_sensors_status();
-    previous_fire_state = fire_level;
-    //previous_proximity_state = proximity;
     publish_high_priority_sensor_values();
-    delay(500);
+    high_priority_sensors_timer = 0;
   }
-  //high_priority_sensors_timer++;
+  
+//  if(previous_fire_state != fire_level && WiFi.status() == WL_CONNECTED){
+//    high_priority_sensors_status();
+//    previous_fire_state = fire_level;
+//    //previous_proximity_state = proximity;
+//    publish_high_priority_sensor_values();
+//    delay(500);
+//  }
+  high_priority_sensors_timer++;
   low_priority_sensors_timer++;
   connections_timer++;
   delay(1);
