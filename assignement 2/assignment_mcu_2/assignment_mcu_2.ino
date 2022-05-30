@@ -125,7 +125,6 @@ void setup() {
  * LOOP
  */
 void loop() {
-  
   if(connections_timer >= connections_timer_flag){
     Serial.println(F("\nChecking if connections are ok.."));
     check_wifi();   
@@ -134,19 +133,20 @@ void loop() {
   }
   
   mqttClient.loop();
+  update_high_priority_sensors();
   if(low_priority_sensors_timer >= low_priority_sensors_timer_flag && WiFi.status() == WL_CONNECTED){
     update_sensor_values();
     sensors_status();
     publish_sensor_values();
     low_priority_sensors_timer = 0;
   }
-  
-  if(high_priority_sensors_timer >= high_priority_sensors_timer_flag && WiFi.status() == WL_CONNECTED){
-    update_high_priority_sensors();
-    high_priority_sensors_status();
-    publish_high_priority_sensor_values();
-    high_priority_sensors_timer = 0;
-  }
+//  
+//  if(high_priority_sensors_timer >= high_priority_sensors_timer_flag && WiFi.status() == WL_CONNECTED){
+//    update_high_priority_sensors();
+//    high_priority_sensors_status();
+//    publish_high_priority_sensor_values();
+//    high_priority_sensors_timer = 0;
+//  }
   
   if(previous_fire_state != fire_level && WiFi.status() == WL_CONNECTED){
     high_priority_sensors_status();

@@ -30,6 +30,7 @@ void publish_high_priority_sensor_values(){
     doc["id"] = "production";  
     doc["priority"] = "high";  
     doc["fire"] = fire_level;
+    doc["proximity"]=false;
     //doc["proximity"] = proximity;
     char buffer[256];
     size_t sensors = serializeJson(doc, buffer);
@@ -102,6 +103,3 @@ void high_priority_sensors_status(){
   Serial.print(F("proximity: "));
   Serial.println(bool2str(proximity));
 }
-
-
-
