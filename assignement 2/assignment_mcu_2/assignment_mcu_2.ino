@@ -67,7 +67,7 @@ int low_priority_sensors_timer = 0;
 int low_priority_sensors_timer_flag = 10000;
 
 int high_priority_sensors_timer = 0;
-int high_priority_sensors_timer_flag = 5000;
+int high_priority_sensors_timer_flag = 1000;
 
 int connections_timer = 0;
 int connections_timer_flag = 10000;
