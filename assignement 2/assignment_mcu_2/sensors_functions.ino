@@ -68,7 +68,6 @@ void update_sensor_values(){
   temperature = dht.readTemperature();
   real_temperature = dht.computeHeatIndex(temperature, humidity, false);
   
-  rssi = WiFi.RSSI();
 }
 
 void sensors_status(){
