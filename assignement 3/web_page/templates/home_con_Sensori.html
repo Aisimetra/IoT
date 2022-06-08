@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!--    <meta http-equiv="refresh" content="5">-->
+    <title>Stazione di Controllo Vigna 2.0</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
+    <style>
+        html {font-family: Helvetica; display: inline-block; margin: 0px auto; text-align: center;}
+        .badge-success{font-size: 15px;padding: 10px 20px;}
+        .badge-danger{font-size: 15px;padding: 10px 20px;}
+        .badge-warning{font-size: 15px;padding: 10px 20px;}
+        .label-warning[href]:focus,.label-warning[href]:hover{background-color:#ec971f;color:black;}
+        .badge-success:focus,.badge-success:hover{color:#fff;text-decoration:none;cursor:pointer}
+        .label{display:inline;padding: 5px 10px;font-size:75%;font-weight:700;line-height:1;color:#fff;text-align:center;white-space:nowrap;vertical-align:baseline;border-radius:.25em}
+        .label:empty{display:none}.btn .label{position:relative;top:-1px}.label-default{background-color:#777}.label-default[href]:focus,.label-default[href]:hover{background-color:#5e5e5e}.label-primary{background-color:#337ab7}.label-primary[href]:focus,.label-primary[href]:hover{background-color:#286090}.label-success{background-color:#5cb85c}.label-success[href]:focus,.label-success[href]:hover{background-color:#449d44}.label-info{background-color:#5bc0de}.label-info[href]:focus,.label-info[href]:hover{background-color:#31b0d5}.label-warning{background-color:#f0ad4e}.label-warning[href]:focus,.label-warning[href]:hover{background-color:#ec971f}.label-danger{background-color:#d9534f}.label-danger[href]:focus,.label-danger[href]:hover{background-color:#c9302c}
+        .label-warning{background-color:#f0ad4e;color:black;}.label-warning[href]:focus,.label-warning[href]:hover{background-color:#ec971f;color:black;}}
+</style>
+</head>
+<body >
+    <nav class="d-flex justify-content-between navbar navbar-expand-lg navbar-dark bg-dark mb-2">
+            <a class="navbar-brand col-md-3 col-lg-2 mr-0 px-3" href="/">Stazione di Controllo Vigna 2.0</a>
+<!--            <a class="badge badge-success" href="/gestione_nodi">Gestione nodi</a>-->
+    </nav>
+    <div class="container-fluid" align="center">
+        <div class="card mb-2" >
+            <div class="row" >
+                <div class="col-6 col-md-4">
+                    <div class="card-body">
+                        <div class="card-title" >
+                            Incendio nella Produzione
+                        </div>
+                        <span id="label1" class="badge {{badge1}}" >{{label1}}</span>
+                    </div>
+                </div>
+                <div class="col-6 col-md-4" >
+                    <div class="card-body" >
+                        <div class="card-title">
+                            Allarme Intrusi nello Stoccaggio
+                        </div>
+                        <span id="intruso_stoccaggio" class="badge {{badge2}}">
+                            {{label2}}
+                        </span>
+                    </div>
+                </div>
+                <div class="col-6 col-md-4">
+                    <div class="card-body">
+                        <div class="card-title">
+                            Incendio nello Stoccaggio
+                        </div>
+                        <span id="basementTempLabel" class="badge {{badge3}}">{{label3}}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card mb-2" align="center">
+            <div class="row">
+                <div class="col-12" align="center">
+                    <div class="col-12 col-md-5" align="center">
+                        <h3>Sensori Produzione</h3>
+                        <table class="table table-bordered table-striped mt-2" align="center">
+                            <tbody>
+                                <tr>
+                                    <th>Temperatura</th>
+                                    <td class="d-flex justify-content-between" >
+                                        {{temp_v}} °C
+
+
+                                            <span class="label {{badge_sensore_temp}}">{{label_sensore_temp}}</span>
+
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Temperatura percepita</th>
+                                    <td class="d-flex justify-content-between" >
+                                        {{real_temp_v}} °C
+
+                                            <span class="label {{badge_sensore_real_temp}}">{{label_sensore_real_temp}}</span>
+
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Umidità</th>
+                                    <td class="d-flex justify-content-between" >
+                                        {{hum_v}} %
+
+
+                                            <span class="label {{badge_sensore_hum}}">{{label_sensore_hum}}</span>
+
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script src="http://code.jquery.com/jquery-3.1.1.js">
+    setInterval(
+        function(){
+            $("#intruso_stoccaggio").load({{label2}});
+        },
+        1000);
+</script>
+</body>
+
+</html>
