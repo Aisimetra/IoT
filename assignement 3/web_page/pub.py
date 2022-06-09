@@ -12,6 +12,8 @@ import re
 import json
 from flask_mysqldb import MySQL
 
+from bot_2 import alarm_proximity
+
 app = Flask(__name__)
 # from flask_mysqldb import MySQL
 
@@ -128,19 +130,14 @@ def hom_sens():
 
     if not storage:
         storage = (-1, "", -1, -1, -1)
+    else:
+        alarm_proximity()
 
     if not alarm_prod:
         alarm_prod = (-1, "", "", "")
 
     if not alarm_storage:
         alarm_storage = (-1, "", "", "")
-
-    # print('prossimità storage ' + alarm_storage[-2][2])
-    # print(alarm_storage)
-    # print(storage)
-    # print('temeratura' + storage[-1][1])
-    # print('percepita ' + storage[-1][2])
-    # print('umidità ' + storage[-1][3])
 
     label_sensore_temp, badge_sensore_temp = check_sensore_temp(storage[2])
     label_sensore_real_temp, badge_sensore_real_temp = check_sensore_temp(storage[3])
@@ -159,90 +156,6 @@ def hom_sens():
                            badge_sensore_real_temp=badge_sensore_real_temp,
                            label_sensore_hum=label_sensore_hum, badge_sensore_hum=badge_sensore_hum
                            )
-
-    # p incendio s intruso s incendio
-    # if alarm_prod[-3][2] == 'True' and alarm_storage[-2][3] == 'True' and alarm_storage[-2][2] == 'True':
-    #     return render_template('home_con_Sensori.html', label1="Incendio", badge1="badge-danger", label2="Intruso",
-    #                            badge2="badge-danger", label3="Incendio", badge3="badge-danger",
-    #                            temp_v=storage[-1][1], real_temp_v=storage[-1][2], hum_v=storage[-1][3],
-    #                            label_sensore_temp=label_sensore_temp, badge_sensore_temp=badge_sensore_temp,
-    #                            label_sensore_real_temp=label_sensore_real_temp,
-    #                            badge_sensore_real_temp=badge_sensore_real_temp,
-    #                            label_sensore_hum=label_sensore_hum, badge_sensore_hum=badge_sensore_hum)
-    # # p tranquillo s intruso s incendio
-    # elif alarm_prod[-3][2] == 'False' and alarm_storage[-2][3] == 'True' and alarm_storage[-2][2] == 'True':
-    #     return render_template('home_con_Sensori.html', label1="Tranquillo", badge1="badge-success", label2="Intruso",
-    #                            badge2="badge-danger", label3="Incendio", badge3="badge-danger",
-    #                            temp_v=storage[-1][2], real_temp_v=storage[-1][3], hum_v=storage[-1][4],
-    #                            label_sensore_temp=label_sensore_temp, badge_sensore_temp=badge_sensore_temp,
-    #                            label_sensore_real_temp=label_sensore_real_temp,
-    #                            badge_sensore_real_temp=badge_sensore_real_temp,
-    #                            label_sensore_hum=label_sensore_hum, badge_sensore_hum=badge_sensore_hum
-    #                            )
-    # # p incendio s intruso s tranquillo
-    # elif alarm_prod[-3][2] == 'True' and alarm_storage[-2][3] == 'True' and alarm_storage[-2][2] == 'False':
-    #     return render_template('home_con_Sensori.html', label1="Incendio", badge1="badge-danger", label2="Intruso",
-    #                            badge2="badge-danger", label3="Tranquillo", badge3="badge-success",
-    #                            temp_v=storage[-1][2], real_temp_v=storage[-1][3], hum_v=storage[-1][4],
-    #                            label_sensore_temp=label_sensore_temp, badge_sensore_temp=badge_sensore_temp,
-    #                            label_sensore_real_temp=label_sensore_real_temp,
-    #                            badge_sensore_real_temp=badge_sensore_real_temp,
-    #                            label_sensore_hum=label_sensore_hum, badge_sensore_hum=badge_sensore_hum
-    #                            )
-    # # p tranquillo s no intruso s incendio
-    # elif alarm_prod[-3][2] == 'False' and alarm_storage[-2][3] == 'False' and alarm_storage[-2][2] == 'True':
-    #     return render_template('home_con_Sensori.html', label1="Tranquillo", badge1="badge-success",
-    #                            label2="Nessun Intruso", badge2="badge-success", label3="Incendio",
-    #                            badge3="badge-danger",
-    #                            temp_v=storage[-1][2], real_temp_v=storage[-1][3], hum_v=storage[-1][4],
-    #                            label_sensore_temp=label_sensore_temp, badge_sensore_temp=badge_sensore_temp,
-    #                            label_sensore_real_temp=label_sensore_real_temp,
-    #                            badge_sensore_real_temp=badge_sensore_real_temp,
-    #                            label_sensore_hum=label_sensore_hum, badge_sensore_hum=badge_sensore_hum
-    #                            )
-    # # p incendio s no intruso s tranquillo
-    # elif alarm_prod[-3][2] == 'True' and alarm_storage[-2][3] == 'False' and alarm_storage[-2][2] == 'False':
-    #     return render_template('home_con_Sensori.html', label1="Incendio", badge1="badge-danger",
-    #                            label2="Nessun Intruso", badge2="badge-success", label3="Tranquillo",
-    #                            badge3="badge-success",
-    #                            temp_v=storage[-1][2], real_temp_v=storage[-1][3], hum_v=storage[-1][4],
-    #                            label_sensore_temp=label_sensore_temp, badge_sensore_temp=badge_sensore_temp,
-    #                            label_sensore_real_temp=label_sensore_real_temp,
-    #                            badge_sensore_real_temp=badge_sensore_real_temp,
-    #                            label_sensore_hum=label_sensore_hum, badge_sensore_hum=badge_sensore_hum
-    #                            )
-    # # p tranquillo s intruso s tranquillo
-    # elif alarm_prod[-3][2] == 'False' and alarm_storage[-2][3] == 'True' and alarm_storage[-2][2] == 'False':
-    #     return render_template('home_con_Sensori.html', label1="Tranquillo", badge1="badge-success", label2="Intruso",
-    #                            badge2="badge-danger", label3="Tranquillo", badge3="badge-success",
-    #                            temp_v=storage[-1][2], real_temp_v=storage[-1][3], hum_v=storage[-1][4],
-    #                            label_sensore_temp=label_sensore_temp, badge_sensore_temp=badge_sensore_temp,
-    #                            label_sensore_real_temp=label_sensore_real_temp,
-    #                            badge_sensore_real_temp=badge_sensore_real_temp,
-    #                            label_sensore_hum=label_sensore_hum, badge_sensore_hum=badge_sensore_hum
-    #                            )
-    # # p incendio s no intruso s incendio
-    # elif alarm_prod[-3][2] == 'True' and alarm_storage[-2][3] == 'False' and alarm_storage[-2][2] == 'True':
-    #     return render_template('home_con_Sensori.html', label1="Incendio", badge1="badge-danger",
-    #                            label2="Nessun Intruso", badge2="badge-success", label3="Incendio",
-    #                            badge3="badge-danger",
-    #                            temp_v=storage[-1][2], real_temp_v=storage[-1][3], hum_v=storage[-1][4],
-    #                            label_sensore_temp=label_sensore_temp, badge_sensore_temp=badge_sensore_temp,
-    #                            label_sensore_real_temp=label_sensore_real_temp,
-    #                            badge_sensore_real_temp=badge_sensore_real_temp,
-    #                            label_sensore_hum=label_sensore_hum, badge_sensore_hum=badge_sensore_hum
-    #                            )
-    # # p tranquillo s tranquillo s tranquillo
-    # else:
-    #     return render_template('home_con_Sensori.html', label1="Tranquillo", badge1="badge-success",
-    #                            label2="Nessun Intruso", badge2="badge-success", label3="Tranquillo",
-    #                            badge3="badge-success",
-    #                            temp_v=storage[-1][2], real_temp_v=storage[-1][3], hum_v=storage[-1][4],
-    #                            label_sensore_temp=label_sensore_temp, badge_sensore_temp=badge_sensore_temp,
-    #                            label_sensore_real_temp=label_sensore_real_temp,
-    #                            badge_sensore_real_temp=badge_sensore_real_temp,
-    #                            label_sensore_hum=label_sensore_hum, badge_sensore_hum=badge_sensore_hum
-    #                            )
 
 
 def check_db_table(table):

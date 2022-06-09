@@ -9,6 +9,8 @@ from telegram.ext import (
     ConversationHandler,
     CallbackContext,
 )
+import telegram_send
+
 
 # Enable logging
 logging.basicConfig(
@@ -43,6 +45,7 @@ def start(update: Update, _: CallbackContext) -> int:
 
 # settaggio degli allarmi
 def alarm(update: Update, _: CallbackContext) -> int:
+    telegram_send.send(messages=["entra in alarm"])
     user = update.message.from_user
     logger.info("Gender of %s: %s", user.first_name, update.message.text)
     update.message.reply_text(
