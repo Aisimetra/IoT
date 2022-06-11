@@ -28,6 +28,7 @@ bool proximity = false;
 bool previous_fire_state = false;
 
 
+
 //input pins
 //#define PROXIMITY_SENSOR_PIN D5
 #define DHT_PIN D3
@@ -56,8 +57,23 @@ MQTTClient mqttClient(MQTT_BUFFER_SIZE);   // handles the MQTT communication pro
 WiFiClient networkClient;
 #define MQTT_TOPIC_GENERIC "gmadotto1/general"
 #define MQTT_BOARD_TOPIC "gmadotto1/data"
-//#define MQTT_BOARD_TOPIC_LOW_PRIORITY "gmadotto1/production/low_priority"
-//#define MQTT_BOARD_TOPIC_HIGH_PRIORITY "gmadotto1/production/high_priority"
+#define MQTT_BOARD_TOPIC_API "gmadotto1/api"
+
+
+// weather api (refer to https://openweathermap.org/current)
+String loc="";
+String ct="";
+float lat = 0.0;
+float lon = 0.0;
+bool is_authorized_to_get_data = false;
+WiFiClient client;
+const char weather_server[] = "api.openweathermap.org";
+//const char weather_query[] = "GET /data/2.5/forecast?lat=%f&lon=%f&cnt=5&appid=%s";
+const char weather_query[] = "GET /data/2.5/weather?q=%s,%s&units=metric&APPID=%s";
+const char location_query[] = "GET /geo/1.0/direct?q=%s,%s&limit=1&appid=%s";
+//"GET /data/2.5/weather?q=%s,%s&units=metric&APPID=%s";
+
+
 bool is_subscribed_to_general = false;
 bool is_already_sub_to_topic = false;
 
@@ -127,35 +143,34 @@ void setup() {
 void loop() {
   if(connections_timer >= connections_timer_flag){
     Serial.println(F("\nChecking if connections are ok.."));
-    check_wifi();   
-    checkMQTTBroker();
+    //check_wifi();   
+    //checkMQTTBroker();
     connections_timer = 0;
   }
   
   mqttClient.loop();
-  update_high_priority_sensors();
+  
   if(low_priority_sensors_timer >= low_priority_sensors_timer_flag && WiFi.status() == WL_CONNECTED){
     update_sensor_values();
-    sensors_status();
+    //sensors_status();
     publish_sensor_values();
     low_priority_sensors_timer = 0;
   }
-//  
-//  if(high_priority_sensors_timer >= high_priority_sensors_timer_flag && WiFi.status() == WL_CONNECTED){
-//    update_high_priority_sensors();
-//    high_priority_sensors_status();
-//    publish_high_priority_sensor_values();
-//    high_priority_sensors_timer = 0;
-//  }
   
-  if(previous_fire_state != fire_level && WiFi.status() == WL_CONNECTED){
-    high_priority_sensors_status();
+  if(high_priority_sensors_timer >= high_priority_sensors_timer_flag && WiFi.status() == WL_CONNECTED){
+    update_high_priority_sensors();
+    if(fire_level != previous_fire_state)
+      publish_high_priority_sensor_values();
     previous_fire_state = fire_level;
-    //previous_proximity_state = proximity;
-    publish_high_priority_sensor_values();
-    delay(500);
+    high_priority_sensors_timer = 0;
   }
-  //high_priority_sensors_timer++;
+  if(is_authorized_to_get_data){
+    //retrieve_location()
+    delay(100);
+    get_weather(true);
+    is_authorized_to_get_data = false;
+  }
+  high_priority_sensors_timer++;
   low_priority_sensors_timer++;
   connections_timer++;
   delay(1);
