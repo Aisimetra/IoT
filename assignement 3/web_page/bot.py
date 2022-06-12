@@ -1,6 +1,24 @@
-import logging
+#!/usr/bin/env python
+# pylint: disable=C0116
+# This program is dedicated to the public domain under the CC0 license.
 
-from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove, Update
+"""
+First, a few callback functions are defined. Then, those functions are passed to
+the Dispatcher and registered at their respective places.
+Then, the bot is started and runs until we press Ctrl-C on the command line.
+
+Usage:
+Example of a bot-user conversation using ConversationHandler.
+Send /start to initiate the conversation.
+Press Ctrl-C on the command line or send a signal to the process to stop the
+bot.
+"""
+
+import logging
+from typing import Dict
+
+import telegram_send
+from telegram import ReplyKeyboardMarkup, Update, ReplyKeyboardRemove
 from telegram.ext import (
     Updater,
     CommandHandler,
@@ -9,8 +27,8 @@ from telegram.ext import (
     ConversationHandler,
     CallbackContext,
 )
-import telegram_send
 
+from pub import my_sql_connection_select_low
 
 # Enable logging
 logging.basicConfig(
@@ -19,17 +37,28 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-ALARM, TEMP_HUM, PIOVE, VENTO = range(4)
+CHOOSING, TYPING_REPLY, TYPING_CHOICE = range(3)
+
+reply_keyboard = [
+    ['Alarmi'],
+    ['Temperatura nello Stoccaggio'],
+    ['Umidità nello Stoccaggio'],
+    ['Gabriele'],
+    ['Termina']
+]
+markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True)
+
+
+def facts_to_str(user_data: Dict[str, str]) -> str:
+    facts = list()
+
+    for key, value in user_data.items():
+        facts.append(f'{key} - {value}')
+
+    return "\n".join(facts).join(['\n', '\n'])
 
 
 def start(update: Update, _: CallbackContext) -> int:
-    reply_keyboard = [['Invia notifica di Allarme'], ['Temperatura e Umidità nello Stoccaggio'], ['Piove'], ['Vento']]
-
-    update.message.reply_text(
-        'Ciao! Io sono il bot che ti permetterà di monitorare i parametri del tuo vigneto! ',
-        reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=False),
-    )
-
     update.message.reply_text(
         'Puoi chiedermi tramite la tastiera: '
         '\n\n- di mandarti messaggi di allarme per intrusione'
@@ -37,122 +66,191 @@ def start(update: Update, _: CallbackContext) -> int:
         '\n\n- la probabilità di pioggia/ se piove'
         '\n\n- la velocità del vento'
         '\n\nInviami /cancel per smettere di parlarmi.\n\n',
-        reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True),
+        reply_markup=markup,
     )
 
-    return ALARM
+    return CHOOSING
 
 
-# settaggio degli allarmi
-def alarm(update: Update, _: CallbackContext) -> int:
-    telegram_send.send(messages=["entra in alarm"])
-    user = update.message.from_user
-    logger.info("Gender of %s: %s", user.first_name, update.message.text)
+def alarm(update: Update, context: CallbackContext) -> int:
+    update.message.reply_text(f'Attivo la ricezione degli alarmi')
+    return CHOOSING
+
+
+def alarm_proximity(update: Update, context: CallbackContext) -> int:
+    update.message.reply_text(f'Prossimità')
+
+    return CHOOSING
+
+
+def temp(update: Update, _: CallbackContext) -> int:
+    storage = my_sql_connection_select_low()
+
     update.message.reply_text(
-        'I see! Please send me a temp_hum of yourself, '
-        'so I know what you look like, or send /skip if you don\'t want to.',
+        'La temperatura in questo momento nello stoccaggio è di  ' + storage[2]
+    )
+
+    return CHOOSING
+
+
+def hum(update: Update, _: CallbackContext) -> int:
+    storage = my_sql_connection_select_low()
+
+    update.message.reply_text(
+        'L\'umidità in questo momento nello stoccaggio è di  ' + storage[4]
+    )
+
+    return CHOOSING
+
+
+def pera(update: Update, _: CallbackContext) -> int:
+    update.message.reply_text(
+        '\U0001F350'
+    )
+
+    return CHOOSING
+
+
+def done(update: Update, context: CallbackContext) -> int:
+    user_data = context.user_data
+    if 'choice' in user_data:
+        del user_data['choice']
+
+    update.message.reply_text(
+        f"Grazie per aver utilizzato il nostro bot!",
         reply_markup=ReplyKeyboardRemove(),
     )
 
-    return TEMP_HUM  # DOVE DEVE ANDARE DOPO
-
-
-def temp_hum(update: Update, _: CallbackContext) -> int:
-    user = update.message.from_user
-    temp_hum_file = update.message.temp_hum[-1].get_file()
-    temp_hum_file.download('user_temp_hum.jpg')
-    logger.info("temp_hum of %s: %s", user.first_name, 'user_temp_hum.jpg')
-    update.message.reply_text(
-        'Gorgeous! Now, send me your piove please, or send /skip if you don\'t want to.'
-    )
-
-    return PIOVE
-
-
-def skip_temp_hum(update: Update, _: CallbackContext) -> int:
-    user = update.message.from_user
-    logger.info("User %s did not send a temp_hum.", user.first_name)
-    update.message.reply_text(
-        'I bet you look great! Now, send me your piove please, or send /skip.'
-    )
-
-    return PIOVE
-
-
-def piove(update: Update, _: CallbackContext) -> int:
-    user = update.message.from_user
-    user_piove = update.message.piove
-    logger.info(
-        "piove of %s: %f / %f", user.first_name, user_piove.latitude, user_piove.longitude
-    )
-    update.message.reply_text(
-        'Maybe I can visit you sometime! At last, tell me something about yourself.'
-    )
-
-    return VENTO
-
-
-def skip_piove(update: Update, _: CallbackContext) -> int:
-    user = update.message.from_user
-    logger.info("User %s did not send a piove.", user.first_name)
-    update.message.reply_text(
-        'You seem a bit paranoid! At last, tell me something about yourself.'
-    )
-
-    return VENTO
-
-
-def vento(update: Update, _: CallbackContext) -> int:
-    user = update.message.from_user
-    logger.info("vento of %s: %s", user.first_name, update.message.text)
-    update.message.reply_text('Thank you! I hope we can talk again some day.')
-
-    return ConversationHandler.END
-
-
-def cancel(update: Update, _: CallbackContext) -> int:
-    user = update.message.from_user
-    logger.info("User %s canceled the conversation.", user.first_name)
-    update.message.reply_text(
-        'Bye! I hope we can talk again some day.', reply_markup=ReplyKeyboardRemove()
-    )
-
+    user_data.clear()
     return ConversationHandler.END
 
 
 def main() -> None:
     # Create the Updater and pass it your bot's token.
-    updater = Updater("5537150617:AAE8ifKEb3ZoeOuiUBSAOL2_Y0IyORXkFbc")
+    updater = Updater("5423079267:AAGp166tckTwLGsL3TwF7dXPg9n6m6Gm9AA")
 
     # Get the dispatcher to register handlers
     dispatcher = updater.dispatcher
 
-    # Add conversation handler with the states GENDER, temp_hum, piove and vento -> stati finiti
+    # Add conversation handler with the states CHOOSING, TYPING_CHOICE and TYPING_REPLY
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler('start', start)],
         states={
-            ALARM: [MessageHandler(Filters.regex('^(Boy|Girl|Other)$'), alarm)],
-            temp_hum: [MessageHandler(Filters.text, temp_hum), CommandHandler('skip', skip_temp_hum)],
-            piove: [
-                MessageHandler(Filters.text, piove),
-                CommandHandler('skip', skip_piove),
-            ],
-            vento: [MessageHandler(Filters.text & ~Filters.command, vento)],
+            CHOOSING: [
+                MessageHandler(Filters.regex('^(Alarmi)$'), alarm),
+                MessageHandler(Filters.regex('^(Temperatura nello Stoccaggio)$'), temp),
+                MessageHandler(Filters.regex('^(Umidità nello Stoccaggio)$'), hum),
+                MessageHandler(Filters.regex('^(Gabriele)$'), pera),
+                MessageHandler(Filters.regex('^(Termina)$'), done)
+            ]
         },
-        fallbacks=[CommandHandler('cancel', cancel)],
-
+        fallbacks=[MessageHandler(Filters.regex('^Done$'), done)],
     )
 
     dispatcher.add_handler(conv_handler)
-
-    # Start the Bot
     updater.start_polling()
-
-    # Run the bot until you press Ctrl-C or the process receives SIGINT,
-    # SIGTERM or SIGABRT. This should be used most of the time, since
-    # start_polling() is non-blocking and will stop the bot gracefully.
     updater.idle()
 
 
 if __name__ == '__main__':
     main()
+
+
+
+
+
+
+
+---------------
+
+import os
+import time
+
+import paho.mqtt.client as mqtt
+
+from telegram.bot import Bot
+from telegram.parsemode import ParseMode
+
+# initializing the bot with API_KEY and CHAT_ID
+if os.getenv('TELEGRAM_BOT_API_KEY') == None:
+    print("Error: Please set the environment variable TELEGRAM_BOT_API_KEY and try again.")
+    exit(1)
+bot = Bot(os.getenv('TELEGRAM_BOT_API_KEY'))
+
+if os.getenv('TELEGRAM_BOT_CHAT_ID') == None:
+    print("Error: Please set the environment variable TELEGRAM_BOT_CHAT_ID and try again.")
+    exit(1)
+chat_id = os.getenv('TELEGRAM_BOT_CHAT_ID')
+
+# based on example from https://pypi.org/project/paho-mqtt/
+# The callback for when the client receives a CONNACK response from the server.
+
+
+def on_connect(client, userdata, flags, rc):
+    print("Connected with result code "+str(rc))
+    if rc == 0:
+        print("Connected successfully to broker")
+    else:
+        print("Connection failed")
+
+    # Subscribing in on_connect() means that if we lose the connection and
+    # reconnect then subscriptions will be renewed.
+
+    # client.subscribe("teslamate/cars/1/version")
+    client.subscribe("teslamate/cars/1/update_available")
+
+
+# The callback for when a PUBLISH message is received from the server.
+
+
+def on_message(client, userdata, msg):
+    print(msg.topic+" "+str(msg.payload.decode()))
+
+    if msg.payload.decode() == "true":
+        print("A new SW update for your Tesla is available!")
+        bot.send_message(
+            chat_id,
+            # text="<b>"+"SW Update"+"</b>\n"+"A new SW update for your Tesla is available!\n\n<b>"+msg.topic+"</b>\n"+str(msg.payload.decode()),
+            text="<b>"+"SW Update"+"</b>\n"+"A new SW update for your Tesla is available!",
+            parse_mode=ParseMode.HTML,
+        )
+
+
+client = mqtt.Client()
+client.on_connect = on_connect
+client.on_message = on_message
+
+client.username_pw_set
+if os.getenv('MQTT_BROKER_USERNAME') == None:
+    pass
+else:
+    if os.getenv('MQTT_BROKER_PASSWORD') == None:
+        client.username_pw_set(os.getenv('MQTT_BROKER_USERNAME', ''))
+    else:
+        client.username_pw_set(os.getenv('MQTT_BROKER_USERNAME', ''), os.getenv('MQTT_BROKER_PASSWORD', ''))
+
+client.connect(os.getenv('MQTT_BROKER_HOST', '127.0.0.1'),
+               int(os.getenv('MQTT_BROKER_PORT', 1883)), 60)
+
+# Blocking call that processes network traffic, dispatches callbacks and
+# handles reconnecting.
+# Other loop*() functions are available that give a threaded interface and a
+# manual interface.
+# client.loop_forever()
+
+
+client.loop_start()  # start the loop
+try:
+
+    while True:
+
+        time.sleep(1)
+
+except KeyboardInterrupt:
+
+    print("exiting")
+
+
+client.disconnect()
+
+client.loop_stop()

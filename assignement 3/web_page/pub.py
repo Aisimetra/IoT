@@ -11,8 +11,8 @@ from flask import Flask, render_template, request
 import re
 import json
 from flask_mysqldb import MySQL
+from telegram import update
 
-from bot_2 import alarm_proximity
 
 app = Flask(__name__)
 # from flask_mysqldb import MySQL
@@ -130,8 +130,6 @@ def hom_sens():
 
     if not storage:
         storage = (-1, "", -1, -1, -1)
-    else:
-        alarm_proximity()
 
     if not alarm_prod:
         alarm_prod = (-1, "", "", "")
