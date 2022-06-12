@@ -71,28 +71,7 @@ def start(update: Update, _: CallbackContext) -> int:
 
 
 def alarm(update: Update, context: CallbackContext) -> int:
-    update.message.reply_text(f'Attivo la ricezione degli alarmi')
-
-    return CHOOSING
-
-
-def alarm_proximity(update: Update, context: CallbackContext) -> int:
-    update.message.reply_text(f'Intrusione nello stoccaggio')
-    print('entra in prossimità')
-
-    return CHOOSING
-
-
-def alarm_fire(update: Update, context: CallbackContext) -> int:
-    update.message.reply_text(f'Incendio nella produzione')
-    print('entra in produzione incendio')
-
-    return CHOOSING
-
-
-def alarm_fire_stoc(update: Update, context: CallbackContext) -> int:
-    update.message.reply_text(f'Incendio nello stoccaggio')
-    print('entra in stoccaggio incendio')
+    # update.message.reply_text(f'Attivo la ricezione degli alarmi')
 
     return CHOOSING
 
@@ -100,7 +79,7 @@ def alarm_fire_stoc(update: Update, context: CallbackContext) -> int:
 def temp(update: Update, _: CallbackContext) -> int:
     storage = my_sql_connection_select_low()
     update.message.reply_text(
-        'La temperatura in questo momento nello stoccaggio  è ' + storage[2] + '°C'
+        'La temperatura in questo momento nello stoccaggio è ' + storage[2] + '°C'
     )
 
     return CHOOSING
@@ -211,18 +190,29 @@ def pd(last_dato):  # parsing divino
     check_db_table('asarteschi.storage_high')
 
     if string_parse['id'] == 'production' and string_parse['priority'] == 'high':
-        alarm_fire()
+        telegram_send.send(messages=["\U0001F525 \U0001F525 \U0001F525"])
+        telegram_send.send(messages=["Incendio nella produzione "])
+        telegram_send.send(messages=["\U0001F525 \U0001F525 \U0001F525"])
     elif string_parse['id'] == 'storage' and string_parse['priority'] == 'high' and string_parse['fire'] == 'true' and \
             string_parse['proximity'] == 'true':
-        alarm_fire_stoc()
-        alarm_proximity()
-    elif string_parse['id'] == 'storage' and string_parse['priority'] == 'high' and string_parse['fire'] == 'true':
-        alarm_fire_stoc()
-    elif string_parse['id'] == 'storage' and string_parse['priority'] == 'high' and string_parse['proximity'] == 'true':
-        alarm_proximity()
-    else:
-        print('Si è rotto ')
+        telegram_send.send(messages=["\U0001F525 \U0001F525 \U0001F525"])
+        telegram_send.send(messages=["Incendio nello stoccaggio "])
+        telegram_send.send(messages=["\U0001F525 \U0001F525 \U0001F525"])
+        telegram_send.send(messages=["\U000026A0 \U000026A0 \U000026A0"])
+        telegram_send.send(messages=["Intrusione nello stoccaggio"])
+        telegram_send.send(messages=["\U000026A0 \U000026A0 \U000026A0"])
 
+    elif string_parse['id'] == 'storage' and string_parse['priority'] == 'high' and string_parse['fire'] == 'true':
+        telegram_send.send(messages=["\U0001F525 \U0001F525 \U0001F525"])
+        telegram_send.send(messages=["Incendio nello stoccaggio "])
+        telegram_send.send(messages=["\U0001F525 \U0001F525 \U0001F525"])
+    elif string_parse['id'] == 'storage' and string_parse['priority'] == 'high' and string_parse['proximity'] == 'true':
+        telegram_send.send(messages=["\U000026A0 \U000026A0 \U000026A0"])
+        telegram_send.send(messages=["Intrusione nello stoccaggio"])
+        telegram_send.send(messages=["\U000026A0 \U000026A0 \U000026A0"])
+
+    else:
+     print('Si è rotto ')
 
 if __name__ == '__main__':
     main()
