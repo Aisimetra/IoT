@@ -1,5 +1,5 @@
 # python 3.6
-
+import base64
 import random
 import time
 from datetime import datetime
@@ -9,10 +9,9 @@ from flask_mysqldb import MySQL
 from paho.mqtt import client as mqtt_client
 from flask import Flask, render_template, request
 import re
-import json
+import json, requests
 from flask_mysqldb import MySQL
 from telegram import update
-
 
 app = Flask(__name__)
 # from flask_mysqldb import MySQL
@@ -46,6 +45,13 @@ humidity = 0.0
 fire = 0
 proximity = 0
 
+# API
+BASE_URL = "https://api.openweathermap.org/data/2.5/weather?"
+CITY = "Massa"
+API_KEY = "3864958da0707c963f5bddd1dbd89882"
+URL = BASE_URL + "q=" + CITY + "&appid=" + API_KEY + "&lang=it"
+
+import tkinter as tk
 
 # HTML
 @app.route('/')
@@ -104,17 +110,17 @@ def check_sensore_hum(valore):
 
 
 def check_incendio(value):
-    if value == "False":
+    if value == "False" or value == "false":
         return "Tranquillo", "badge-success"
-    if value == "True":
+    if value == "True" or value == "true":
         return "Incendio", "badge-danger"
     return "Problema al sensore", "badge-warning"
 
 
 def check_intruso(value):
-    if value == "False":
+    if value == "False" or value == "false":
         return "Nessun intruso", "badge-success"
-    if value == "True":
+    if value == "True" or value == "true":
         return "Intruso", "badge-danger"
     return "Problema al sensore", "badge-warning"
 
@@ -127,7 +133,7 @@ def hom_sens():
     print("alarm prod:", alarm_prod)
     print("alarm storage:", alarm_storage)
     print("sensor storage:", storage)
-
+    CITY, temperature, cloud, wind, iconUrl = api_meteo()
     if not storage:
         storage = (-1, "", -1, -1, -1)
 
@@ -148,13 +154,47 @@ def hom_sens():
     return render_template('home_con_Sensori.html', label1=incendio_prod, badge1=incendio_prod_badge,
                            label2=intruso_stoc, badge2=intruso_stoc_badge, label3=incendio_stoc,
                            badge3=incendio_stoc_badge,
-                           temp_v=storage[2], real_temp_v=storage[3], hum_v=storage[4],
+                           temp_v=storage[2], real_temp_v=float("{0:.2f}".format(float(storage[3]))), hum_v=storage[4],
+                           temp_ext=temperature, wind_d=wind, cloud_d=cloud, city=CITY,
                            label_sensore_temp=label_sensore_temp, badge_sensore_temp=badge_sensore_temp,
                            label_sensore_real_temp=label_sensore_real_temp,
                            badge_sensore_real_temp=badge_sensore_real_temp,
-                           label_sensore_hum=label_sensore_hum, badge_sensore_hum=badge_sensore_hum
+                           label_sensore_hum=label_sensore_hum, badge_sensore_hum=badge_sensore_hum,
+                           IMMAGININA = iconUrl
                            )
 
+
+# Api meteo
+def api_meteo():
+    print("api meteo")
+    response = requests.get(URL)
+
+    # checking the status code of the request
+    if response.status_code == 200:
+        # getting data in the json format
+        data = response.json()
+        # getting the main dict block
+        main = data['main']
+        # getting temperature
+        temperature = float("{0:.2f}".format( main['temp'] - 273.15))
+        # weather report
+        report = data['weather']
+        # wind report
+        wind_repo = data['wind']
+        iconCode = report[0]['icon']
+        print(f"{CITY:-^30}")
+        print(f"Temperature: {temperature}")
+        cloud = report[0]['description']
+        print(f"Weather Report: {cloud}")
+        wind_display = wind_repo['speed']
+        print(f"Wind Report: {wind_display}")
+        iconUrl = "http://openweathermap.org/img/w/" + iconCode + ".png"
+
+    else:
+        # showing the error message
+        print("Error in the HTTP request")
+
+    return CITY, temperature, cloud, wind_display, iconUrl, iconCode
 
 def check_db_table(table):
     print("table:", table)

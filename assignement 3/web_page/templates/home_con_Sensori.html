@@ -95,6 +95,44 @@
                         </table>
                     </div>
                 </div>
+                <div class="col-12" align="center">
+                    <div class="col-12 col-md-5" align="center">
+                        <h3>Previsioni del tempo a {{city}} <img src= {{IMMAGININA}} alt="Lamp" width="auto" height="auto"> </h3>
+                        <table class="table table-bordered table-striped mt-2" align="center">
+                            <tbody>
+                                <tr>
+                                    <th>Temperatura Esterna</th>
+                                    <td class="d-flex justify-content-between" >
+                                        {{temp_ext}} °C
+
+
+                                            <span class="label {{badge_sensore_temp}}">{{label_sensore_temp}}</span>
+
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Vento</th>
+                                    <td class="d-flex justify-content-between" >
+                                        {{wind_d}} m/s
+
+                                            <span class="label {{badge_sensore_real_temp}}">{{label_sensore_real_temp}}</span>
+
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Nuvole</th>
+                                    <td class="d-flex justify-content-between" >
+                                        {{cloud_d}}
+
+
+                                            <span class="label {{badge_sensore_hum}}">{{label_sensore_hum}}</span>
+
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
