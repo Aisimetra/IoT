@@ -150,7 +150,7 @@ bool get_weather(bool flag){
     size_t api = serializeJson(query, buffer);
     mqttClient.publish(MQTT_BOARD_TOPIC_API, buffer, api);
   }else{
-    Serial.println(F("Failed to upload (not connected to MQTT or lost WIFI connection)"));
+    Serial.println(F("Failed to upload [api result] (not connected to MQTT or lost WIFI connection)"));
     return false;
   }
     return true;

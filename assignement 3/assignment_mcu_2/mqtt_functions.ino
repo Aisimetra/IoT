@@ -83,7 +83,6 @@ void check_subscriptions(){
     subscribe_to_topic(MQTT_TOPIC_GENERIC);
     if(is_already_sub_to_topic){
       subscribe_to_topic(MQTT_BOARD_TOPIC_API);
-    }
-      
+    }   
   }
 }
