@@ -167,7 +167,8 @@ void loop() {
   
   if(high_priority_sensors_timer >= high_priority_sensors_timer_flag){
     update_high_priority_sensors();
-    previous_fire_state = fire_level;
+    if(fire_level != previous_fire_state){
+      previous_fire_state = fire_level;   
       high_priority_sensors_status();
       wake_mcu();
       delay(500);
@@ -175,8 +176,6 @@ void loop() {
       publish_high_priority_sensor_values();
       delay(500);
       send_mcu_to_sleep();
-    if(fire_level != previous_fire_state){
-      
     }
     previous_fire_state = fire_level;
     high_priority_sensors_timer = 0;

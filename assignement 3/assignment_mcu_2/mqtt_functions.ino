@@ -34,21 +34,21 @@ void mqttMessageReceived(String &topic, String &payload) {
       }  
     }
   }
-  else if(topic.equals(MQTT_BOARD_TOPIC_API)){
-    // deserialize the JSON object
-    
-    StaticJsonDocument<128> doc;
-    deserializeJson(doc, payload);
-    String id = doc["id"];
-    if(id.equalsIgnoreCase("request")){
-      Serial.println("nuova richiesta api");
-      String location = doc["location"];
-      String country = doc["country"]; 
-      loc = location;
-      ct = country;
-      is_authorized_to_get_data = true;
-    }
-  }
+//  else if(topic.equals(MQTT_BOARD_TOPIC_API)){
+//    // deserialize the JSON object
+//    
+//    StaticJsonDocument<128> doc;
+//    deserializeJson(doc, payload);
+//    String id = doc["id"];
+//    if(id.equalsIgnoreCase("request")){
+//      Serial.println("nuova richiesta api");
+//      String location = doc["location"];
+//      String country = doc["country"]; 
+//      loc = location;
+//      ct = country;
+//      is_authorized_to_get_data = true;
+//    }
+//  }
 }
 bool is_invited(String mac){
   if(mac.equalsIgnoreCase(WiFi.macAddress()))
@@ -81,8 +81,8 @@ void check_subscriptions(){
   if (mqttClient.connected()) {
     //subscription check
     subscribe_to_topic(MQTT_TOPIC_GENERIC);
-    if(is_already_sub_to_topic){
-      subscribe_to_topic(MQTT_BOARD_TOPIC_API);
-    }   
+//    if(is_already_sub_to_topic){
+//      subscribe_to_topic(MQTT_BOARD_TOPIC_API);
+//    }   
   }
 }
