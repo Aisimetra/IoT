@@ -16,6 +16,7 @@ void mqttMessageReceived(String &topic, String &payload) {
         //subscribe_to_topic(MQTT_BOARD_TOPIC_HIGH_PRIORITY);
         is_already_sub_to_topic = true;
         Serial.println("Invio conferma iscrizione..");
+        subscribe_to_topic(MQTT_BOARD_TOPIC_API);
         //json di iscrizione
         const int capacity = JSON_OBJECT_SIZE(256);
         StaticJsonDocument<capacity> doc2;
@@ -32,7 +33,22 @@ void mqttMessageReceived(String &topic, String &payload) {
         Serial.println("MAC Differente!");
       }  
     }
-  }  
+  }
+  else if(topic.equals(MQTT_BOARD_TOPIC_API)){
+    // deserialize the JSON object
+    
+    StaticJsonDocument<128> doc;
+    deserializeJson(doc, payload);
+    String id = doc["id"];
+    if(id.equalsIgnoreCase("request")){
+      Serial.println("nuova richiesta api");
+      String location = doc["location"];
+      String country = doc["country"]; 
+      loc = location;
+      ct = country;
+      is_authorized_to_get_data = true;
+    }
+  }
 }
 bool is_invited(String mac){
   if(mac.equalsIgnoreCase(WiFi.macAddress()))
@@ -66,9 +82,7 @@ void check_subscriptions(){
     //subscription check
     subscribe_to_topic(MQTT_TOPIC_GENERIC);
     if(is_already_sub_to_topic){
-      //subscribe_to_topic(MQTT_BOARD_TOPIC_LOW_PRIORITY);
-      //subscribe_to_topic(MQTT_BOARD_TOPIC_HIGH_PRIORITY);
-    }
-      
+      subscribe_to_topic(MQTT_BOARD_TOPIC_API);
+    }   
   }
 }

@@ -26,11 +26,11 @@ void check_wifi() {
     digitalWrite(CONNECTED_MQTTX, HIGH);
     Serial.print(F("Connecting to SSID: "));
     Serial.println(ssid);
-
+    
     #ifdef IP
     WiFi.config(ip, dns, gateway, subnet);
     #endif
-
+    WiFi.mode(WIFI_STA);
     WiFi.begin(ssid, pass);
     byte counter = 1;
     while (WiFi.status() != WL_CONNECTED) {

@@ -28,6 +28,7 @@ bool proximity = false;
 bool previous_fire_state = false;
 
 
+
 //input pins
 //#define PROXIMITY_SENSOR_PIN D5
 #define DHT_PIN D3
@@ -56,21 +57,38 @@ MQTTClient mqttClient(MQTT_BUFFER_SIZE);   // handles the MQTT communication pro
 WiFiClient networkClient;
 #define MQTT_TOPIC_GENERIC "gmadotto1/general"
 #define MQTT_BOARD_TOPIC "gmadotto1/data"
-//#define MQTT_BOARD_TOPIC_LOW_PRIORITY "gmadotto1/production/low_priority"
-//#define MQTT_BOARD_TOPIC_HIGH_PRIORITY "gmadotto1/production/high_priority"
+#define MQTT_BOARD_TOPIC_API "gmadotto1/api"
+
+
+// weather api (refer to https://openweathermap.org/current)
+String loc="";
+String ct="";
+float lat = 0.0;
+float lon = 0.0;
+bool is_authorized_to_get_data = false;
+WiFiClient client;
+const char weather_server[] = "api.openweathermap.org";
+//const char weather_query[] = "GET /data/2.5/forecast?lat=%f&lon=%f&cnt=5&appid=%s";
+const char weather_query[] = "GET /data/2.5/weather?q=%s,%s&units=metric&APPID=%s";
+const char location_query[] = "GET /geo/1.0/direct?q=%s,%s&limit=1&appid=%s";
+//"GET /data/2.5/weather?q=%s,%s&units=metric&APPID=%s";
+
+
 bool is_subscribed_to_general = false;
 bool is_already_sub_to_topic = false;
 
 
 //timers
 int low_priority_sensors_timer = 0;
-int low_priority_sensors_timer_flag = 10000;
+int low_priority_sensors_timer_flag = 20000;
 
 int high_priority_sensors_timer = 0;
-int high_priority_sensors_timer_flag = 5000;
+int high_priority_sensors_timer_flag = 1000;
 
 int connections_timer = 0;
 int connections_timer_flag = 10000;
+
+bool wifi_status = false;
 
 
 /*
@@ -82,7 +100,6 @@ void setup() {
   pinMode(CONNECTED_WIFI, OUTPUT);
   pinMode(CONNECTED_MQTTX, OUTPUT);
   pinMode(FIRE_LED, OUTPUT);
-  //pinMode(PROXIMITY_LED, OUTPUT);
 
   
   digitalWrite(IS_POWERED, HIGH);
@@ -90,25 +107,22 @@ void setup() {
   digitalWrite(CONNECTED_WIFI, HIGH);
   digitalWrite(CONNECTED_MQTTX, HIGH);
   digitalWrite(FIRE_LED, LOW);
-  //digitalWrite(PROXIMITY_LED, LOW);
 
-  
-  
   Serial.begin(115200);
   delay(1000);
   Serial.println(F("\n=== Begin Setup ==="));
   
   //wifi
-  Serial.println(F("Connecting to wifi.."));
-  WiFi.mode(WIFI_STA);
-  check_wifi();
+  //Serial.println(F("Connecting to wifi.."));
+  //WiFi.mode(WIFI_STA);
+  //check_wifi();
   
   // setup MQTT
   Serial.println("");
   Serial.println(F("Setting up MQTT.."));
   mqttClient.begin(MQTT_BROKERIP, 1883, networkClient);   // setup communication with MQTT broker
   mqttClient.onMessage(mqttMessageReceived);
-  checkMQTTBroker();
+  //checkMQTTBroker();
   
   
   //setup sensors
@@ -116,46 +130,65 @@ void setup() {
   //dth
   dht.begin();
   Serial.println(F("DTH11"));
-  //proximity
-  Serial.println(F("Proximity sensor"));
-  //pinMode(PROXIMITY_SENSOR_PIN, INPUT);
+  
+  WiFi.mode(WIFI_OFF);
+  WiFi.forceSleepBegin();
+  Serial.println("WiFi is down");
+  wifi_status = false;
   Serial.println(F("=== Setup completed ===\n"));
+  
 }
 /*
  * LOOP
  */
 void loop() {
-  if(connections_timer >= connections_timer_flag){
-    Serial.println(F("\nChecking if connections are ok.."));
-    check_wifi();   
-    checkMQTTBroker();
-    connections_timer = 0;
-  }
+//  if(connections_timer >= connections_timer_flag){
+//    WiFi.forceSleepWake();
+//    delay(2);
+//    Serial.println(F("\nWifi is on"));
+//    wifi_status = true;
+//    Serial.println(F("Checking if connections are ok.."));
+//    check_wifi();   
+//    checkMQTTBroker();
+//  }
+//  mqttClient.loop();
   
-  mqttClient.loop();
-  update_high_priority_sensors();
-  if(low_priority_sensors_timer >= low_priority_sensors_timer_flag && WiFi.status() == WL_CONNECTED){
+  if(low_priority_sensors_timer >= low_priority_sensors_timer_flag){
     update_sensor_values();
     sensors_status();
-    publish_sensor_values();
-    low_priority_sensors_timer = 0;
-  }
-//  
-//  if(high_priority_sensors_timer >= high_priority_sensors_timer_flag && WiFi.status() == WL_CONNECTED){
-//    update_high_priority_sensors();
-//    high_priority_sensors_status();
-//    publish_high_priority_sensor_values();
-//    high_priority_sensors_timer = 0;
-//  }
-  
-  if(previous_fire_state != fire_level && WiFi.status() == WL_CONNECTED){
-    high_priority_sensors_status();
-    previous_fire_state = fire_level;
-    //previous_proximity_state = proximity;
-    publish_high_priority_sensor_values();
+    wake_mcu();
     delay(500);
+    mqttClient.loop();
+    publish_sensor_values();
+    delay(500);
+    low_priority_sensors_timer = 0;
+    send_mcu_to_sleep();
   }
-  //high_priority_sensors_timer++;
+  
+  if(high_priority_sensors_timer >= high_priority_sensors_timer_flag){
+    update_high_priority_sensors();
+    previous_fire_state = fire_level;
+      high_priority_sensors_status();
+      wake_mcu();
+      delay(500);
+      mqttClient.loop();
+      publish_high_priority_sensor_values();
+      delay(500);
+      send_mcu_to_sleep();
+    if(fire_level != previous_fire_state){
+      
+    }
+    previous_fire_state = fire_level;
+    high_priority_sensors_timer = 0;
+    
+  }
+//  if(is_authorized_to_get_data && wifi_status){
+//    //retrieve_location()
+//    delay(100);
+//    get_weather(true);
+//    is_authorized_to_get_data = false;
+//  }
+  high_priority_sensors_timer++;
   low_priority_sensors_timer++;
   connections_timer++;
   delay(1);
@@ -170,3 +203,20 @@ String bool2str(bool value){
     return "TRUE";
   return "FALSE";
 }
+
+void wake_mcu(){
+  WiFi.forceSleepWake();
+    delay(2);
+    Serial.println(F("\nWifi is on"));
+    wifi_status = true;
+    Serial.println(F("Checking if connections are ok.."));
+    check_wifi();   
+    checkMQTTBroker();
+}
+void send_mcu_to_sleep(){
+  WiFi.mode(WIFI_OFF);
+  WiFi.forceSleepBegin();
+  Serial.println("WiFi is down");
+  wifi_status = false;
+}
+

@@ -2,7 +2,7 @@
  * SENSORS STUFF
  */
 void publish_sensor_values(){
-  if(mqttClient.connected() && WiFi.status() == WL_CONNECTED && is_already_sub_to_topic){
+  if(mqttClient.connected() && WiFi.status() == WL_CONNECTED){
     Serial.print(F("UPLOAD TO MQTT (LOW priority) on ["));
     Serial.print(MQTT_BOARD_TOPIC);
     Serial.println(F("]"));
@@ -18,10 +18,10 @@ void publish_sensor_values(){
     mqttClient.publish(MQTT_BOARD_TOPIC, buffer, sensors);
   }
   else
-    Serial.println(F("Failed to upload (not connected to MQTT or lost WIFI connection)"));
+    Serial.println(F("Failed to upload [low priority] (not connected to MQTT or lost WIFI connection)"));
 }
 void publish_high_priority_sensor_values(){
-  if(mqttClient.connected() && WiFi.status() == WL_CONNECTED && is_already_sub_to_topic){
+  if(mqttClient.connected() && WiFi.status() == WL_CONNECTED){
     Serial.print(F("UPLOAD TO MQTT (HIGH priority) on ["));
     Serial.print(MQTT_BOARD_TOPIC);
     Serial.println(F("]"));
@@ -37,7 +37,7 @@ void publish_high_priority_sensor_values(){
     mqttClient.publish(MQTT_BOARD_TOPIC, buffer, sensors);
   }
   else
-    Serial.println(F("Failed to upload (not connected to MQTT or lost WIFI connection)"));
+    Serial.println(F("Failed to upload [high priority] (not connected to MQTT or lost WIFI connection)"));
 }
 void update_high_priority_sensors(){
   //proximity = digitalRead(PROXIMITY_SENSOR_PIN);
