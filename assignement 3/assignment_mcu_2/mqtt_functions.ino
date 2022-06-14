@@ -16,7 +16,7 @@ void mqttMessageReceived(String &topic, String &payload) {
         //subscribe_to_topic(MQTT_BOARD_TOPIC_HIGH_PRIORITY);
         is_already_sub_to_topic = true;
         Serial.println("Invio conferma iscrizione..");
-        subscribe_to_topic(MQTT_BOARD_TOPIC_API);
+        //subscribe_to_topic(MQTT_BOARD_TOPIC_API);
         //json di iscrizione
         const int capacity = JSON_OBJECT_SIZE(256);
         StaticJsonDocument<capacity> doc2;

@@ -1,9 +1,11 @@
+import asyncio
 import logging
 import random
+from time import sleep
 from typing import Dict
 import emoji
-import requests
-
+from flask import Flask
+from flask_mysqldb import MySQL
 from telegram import ReplyKeyboardMarkup, Update, ReplyKeyboardRemove
 from telegram.ext import (
     Updater,
@@ -13,11 +15,9 @@ from telegram.ext import (
     ConversationHandler,
     CallbackContext,
 )
-from paho.mqtt import client as mqtt_client
-import json
 
-from pub import my_sql_connection_select_low, mysql_connection_insert_low, \
-    mysql_connection_insert_high, check_db_table, api_meteo
+from pub import api_meteo
+
 
 # for mqtt
 broker = '149.132.178.180'
@@ -28,8 +28,18 @@ client_id = f'python-mqtt-{random.randint(0, 1000)}'
 username = 'asarteschi'
 password = 'iot829677'
 
-#
+prev_storage_timestamp = ""
+prev_production_timestamp = ""
 
+chat_ids = []
+
+app = Flask(__name__)
+app.config['MYSQL_HOST'] = '149.132.178.180'
+app.config['MYSQL_USER'] = 'asarteschi'
+app.config['MYSQL_PASSWORD'] = 'iot829677'
+app.config['MYSQL_DB'] = 'asarteschi'
+app.config['MYSQL_DATABASE_PORT'] = 3306
+mysql = MySQL(app)
 
 # Enable logging
 logging.basicConfig(
@@ -50,6 +60,48 @@ reply_keyboard = [
 markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=False)
 
 
+def my_sql_connection_select_low():
+    rows = []
+    with app.app_context():
+        cursor = mysql.connection.cursor()
+        cursor.execute('SELECT * FROM asarteschi.production_low ORDER BY id DESC LIMIT 1')
+        for row in cursor:
+            rows.append(row)
+        mysql.connection.commit()
+        cursor.close()
+        if not rows == []:
+            return rows[0]
+        return []
+
+
+def my_sql_connection_select_high_production():
+    rows = []
+    with app.app_context():
+        cursor = mysql.connection.cursor()
+        cursor.execute('SELECT * FROM asarteschi.production_high ORDER BY id DESC LIMIT 1')
+        for row in cursor:
+            rows.append(row)
+        mysql.connection.commit()
+        cursor.close()
+        if not rows == []:
+            return rows[0]
+        return []
+
+
+def my_sql_connection_select_high_storage():
+    rows = []
+    with app.app_context():
+        cursor = mysql.connection.cursor()
+        cursor.execute('SELECT * FROM asarteschi.storage_high ORDER BY id DESC LIMIT 1')
+        for row in cursor:
+            rows.append(row)
+        mysql.connection.commit()
+        cursor.close()
+        if not rows == []:
+            return rows[0]
+        return []
+
+
 def facts_to_str(user_data: Dict[str, str]) -> str:
     facts = list()
 
@@ -59,7 +111,7 @@ def facts_to_str(user_data: Dict[str, str]) -> str:
     return "\n".join(facts).join(['\n', '\n'])
 
 
-def start(update: Update, _: CallbackContext) -> int:
+def start(update: Update, context: CallbackContext) -> int:
     update.message.reply_text(
         'Da questo momento riceverai tutti gli allarmi della vigna'
         'Puoi chiedermi tramite la tastiera: '
@@ -68,7 +120,12 @@ def start(update: Update, _: CallbackContext) -> int:
         '\n\nInviami /cancel per smettere di parlarmi.\n\n',
         reply_markup=markup,
     )
-
+    id_to_store = update.effective_chat.id
+    print(id_to_store)
+    if not chat_ids:
+        chat_ids.append(id_to_store)
+    elif id_to_store not in chat_ids:
+        chat_ids.append(id_to_store)
     return CHOOSING
 
 
@@ -151,6 +208,7 @@ def pera(update: Update, _: CallbackContext) -> int:
 
 
 def done(update: Update, context: CallbackContext) -> int:
+    chat_ids.remove(update.effective_chat.id)
     user_data = context.user_data
     if 'choice' in user_data:
         del user_data['choice']
@@ -164,6 +222,33 @@ def done(update: Update, context: CallbackContext) -> int:
     return ConversationHandler.END
 
 
+def send_alarm_notification(bot):
+    while True:
+        # storage_alarm = my_sql_connection_select_high_storage()
+        # production_alarm = my_sql_connection_select_high_production()
+        # print(storage_alarm)
+        # print(production_alarm)
+        # cur_timestamp_stor = storage_alarm[1]
+        # cur_timestamp_prod = production_alarm[1]
+
+        print(chat_ids)
+        for chat_id in chat_ids:
+            # if not cur_timestamp_prod == prev_production_timestamp:
+            #     if production_alarm[2] == 'True' or production_alarm[2] == 'true':
+            #         bot.send_message(text='ALLARME INCENDIO IN PRODUZIONE', chat_id=chat_id)
+            #     prev_production_timestamp = cur_timestamp_prod
+            #
+            # if not cur_timestamp_stor == prev_storage_timestamp:
+            #     if storage_alarm[2] == 'True' or storage_alarm[2] == 'true':
+            #         bot.send_message(text='ALLARME INCENDIO IN STOCCAGGIO', chat_id=chat_id)
+            #     if storage_alarm[3] == 'True' or storage_alarm[3] == 'true':
+            #         bot.send_message(text='ALLARME INTRUSO IN STOCCAGGIO', chat_id=chat_id)
+            #     prev_storage_timestamp = cur_timestamp_stor
+
+            bot.send_message(text='studia artemisia', chat_id=chat_id)
+        sleep(30)
+
+
 def main() -> None:
     # Create the Updater and pass it your bot's token.
 
@@ -171,10 +256,8 @@ def main() -> None:
 
     # Get the dispatcher to register handlers
     dispatcher = updater.dispatcher
-    # client = connect_mqtt()
-    # subscribe(client)
-    # client.loop_start()
-    # Add conversation handler with the states CHOOSING, TYPING_CHOICE and TYPING_REPLY
+    dispatcher.run_async(send_alarm_notification, updater.bot)
+
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler('start', start)],
         states={
@@ -183,7 +266,8 @@ def main() -> None:
                 MessageHandler(Filters.regex('^(Temperatura nello Stoccaggio)$'), temp),
                 MessageHandler(Filters.regex('^(Umidità nello Stoccaggio)$'), hum),
                 MessageHandler(Filters.regex('^(Gabriele)$'), pera),
-                MessageHandler(Filters.regex('^(Termina)$'), done)
+                MessageHandler(Filters.regex('^(Termina)$'), done),
+                # MessageHandler(Filters.regex('None'), send_alarm_notification)
             ]
         },
         fallbacks=[MessageHandler(Filters.regex('^Done$'), done)],
@@ -192,7 +276,6 @@ def main() -> None:
     dispatcher.add_handler(conv_handler)
     updater.start_polling()
     updater.idle()
-
 
 
 if __name__ == '__main__':
