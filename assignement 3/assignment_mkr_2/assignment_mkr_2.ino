@@ -139,7 +139,7 @@ void loop() {
     previous_fire_state = fire_level;
     previous_proximity_state = proximity;
     publish_high_priority_sensor_values();
-    delay(500);
+    delay(1000);
   }
   
   //high_priority_sensors_timer++;
