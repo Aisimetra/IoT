@@ -1,7 +1,7 @@
 import asyncio
 import logging
 import random
-from time import sleep
+from time import sleep, strftime
 from typing import Dict
 import emoji
 from flask import Flask
@@ -18,7 +18,6 @@ from telegram.ext import (
 
 from pub import api_meteo
 
-
 # for mqtt
 broker = '149.132.178.180'
 port = 1883
@@ -27,9 +26,6 @@ topic_data = "gmadotto1/data"
 client_id = f'python-mqtt-{random.randint(0, 1000)}'
 username = 'asarteschi'
 password = 'iot829677'
-
-prev_storage_timestamp = ""
-prev_production_timestamp = ""
 
 chat_ids = []
 
@@ -223,36 +219,46 @@ def done(update: Update, context: CallbackContext) -> int:
 
 
 def send_alarm_notification(bot):
+    prev_storage_timestamp = ""
+    prev_production_timestamp = ""
     while True:
-        # storage_alarm = my_sql_connection_select_high_storage()
-        # production_alarm = my_sql_connection_select_high_production()
-        # print(storage_alarm)
-        # print(production_alarm)
-        # cur_timestamp_stor = storage_alarm[1]
-        # cur_timestamp_prod = production_alarm[1]
-
+        storage_alarm = my_sql_connection_select_high_storage()
+        production_alarm = my_sql_connection_select_high_production()
+        cur_timestamp_stor = storage_alarm[1].strftime('%Y-%m-%d %H:%M:%S')
+        cur_timestamp_prod = production_alarm[1].strftime('%Y-%m-%d %H:%M:%S')
         print(chat_ids)
         for chat_id in chat_ids:
-            # if not cur_timestamp_prod == prev_production_timestamp:
-            #     if production_alarm[2] == 'True' or production_alarm[2] == 'true':
-            #         bot.send_message(text='ALLARME INCENDIO IN PRODUZIONE', chat_id=chat_id)
-            #     prev_production_timestamp = cur_timestamp_prod
-            #
-            # if not cur_timestamp_stor == prev_storage_timestamp:
-            #     if storage_alarm[2] == 'True' or storage_alarm[2] == 'true':
-            #         bot.send_message(text='ALLARME INCENDIO IN STOCCAGGIO', chat_id=chat_id)
-            #     if storage_alarm[3] == 'True' or storage_alarm[3] == 'true':
-            #         bot.send_message(text='ALLARME INTRUSO IN STOCCAGGIO', chat_id=chat_id)
-            #     prev_storage_timestamp = cur_timestamp_stor
+            if not cur_timestamp_prod == prev_production_timestamp:
+                if production_alarm[2] == 'True' or production_alarm[2] == 'true':
+                    msg = 'ALLARME IN PRODUZIONE: INCENDIO\n'
+                    #production_alarm[1][3] += production_alarm[1][3] + 2
+                    msg += 'Orario di rilevamento: ' + production_alarm[1].strftime('%Y-%m-%d %H:%M:%S')
+                    bot.send_message(text=msg, chat_id=chat_id)
 
-            bot.send_message(text='studia artemisia', chat_id=chat_id)
-        sleep(30)
+            if not cur_timestamp_stor == prev_storage_timestamp:
+                if storage_alarm[2] == 'True' or storage_alarm[2] == 'true':
+                    msg = 'ALLARME IN STOCCAGGIO: INCENDIO\n'
+                    #storage_alarm[1][3] += storage_alarm[1][3] + 2
+                    msg += 'Orario di rilevamento: ' + storage_alarm[1].strftime('%Y-%m-%d %H:%M:%S')
+                    bot.send_message(text=msg, chat_id=chat_id)
+
+                if storage_alarm[3] == 'True' or storage_alarm[3] == 'true':
+                    msg = 'ALLARME IN STOCCAGGIO: INTRUSO\n'
+                    #storage_alarm[1][3] += production_alarm[1][3] + 2
+                    msg += 'Orario di rilevamento: ' + storage_alarm[1].strftime('%Y-%m-%d %H:%M:%S')
+                    bot.send_message(text=msg, chat_id=chat_id)
+
+            # bot.send_message(text='studia artemisia', chat_id=chat_id)
+        if not chat_ids == []:
+            prev_production_timestamp = cur_timestamp_prod
+            prev_storage_timestamp = cur_timestamp_stor
+        sleep(10)
 
 
 def main() -> None:
     # Create the Updater and pass it your bot's token.
 
-    updater = Updater("5514482549:AAHiP3MoIlocnSZUmbpKxx0GW2f6nxy2deQ")
+    updater = Updater("5514482549:AAHiP3MoIlocnSZUmbpKxx0GW2f6nxy2deQ", use_context=True)
 
     # Get the dispatcher to register handlers
     dispatcher = updater.dispatcher
