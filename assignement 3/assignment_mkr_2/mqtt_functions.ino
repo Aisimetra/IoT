@@ -48,11 +48,11 @@ void subscribe_to_topic(String topic){
 }
 void checkMQTTBroker() {
   if (!mqttClient.connected()) {   // not connected
-    digitalWrite(CONNECTED_MQTTX, HIGH);
+    digitalWrite(CONNECTED_MQTTX, LOW);
     Serial.print(F("Connecting to MQTT broker..."));
     while (!mqttClient.connect(MQTT_CLIENTID, MQTT_USERNAME, MQTT_PASSWORD)) {
       Serial.print(F("."));
-      delay(500);
+      delay(100);
     }
     
     Serial.println(F(""));

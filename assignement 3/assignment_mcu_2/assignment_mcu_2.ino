@@ -161,8 +161,8 @@ void loop() {
     mqttClient.loop();
     publish_sensor_values();
     delay(500);
-    low_priority_sensors_timer = 0;
     send_mcu_to_sleep();
+    low_priority_sensors_timer = 0;
   }
   
   if(high_priority_sensors_timer >= high_priority_sensors_timer_flag){

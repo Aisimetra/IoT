@@ -51,6 +51,7 @@ reply_keyboard = [
     ['Temperatura nello Stoccaggio'],
     ['Umidità nello Stoccaggio'],
     ['Gabriele'],
+    ['Artemisia'],
     ['Termina']
 ]
 markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=False)
@@ -118,10 +119,13 @@ def start(update: Update, context: CallbackContext) -> int:
     )
     id_to_store = update.effective_chat.id
     print(id_to_store)
+    #user id, prod_prev_timestamp, storage_prev_timestamp
     if not chat_ids:
-        chat_ids.append(id_to_store)
+        user_log = (id_to_store, "", "")
+        chat_ids.append(user_log)
     elif id_to_store not in chat_ids:
-        chat_ids.append(id_to_store)
+        user_log = (id_to_store, "", "")
+        chat_ids.append(user_log)
     return CHOOSING
 
 
@@ -202,9 +206,17 @@ def pera(update: Update, _: CallbackContext) -> int:
 
     return CHOOSING
 
+def arte(update: Update, _: CallbackContext) -> int:
+    update.message.reply_photo(photo=open('artemisia.jpg', 'rb'))
+
+    return CHOOSING
+
 
 def done(update: Update, context: CallbackContext) -> int:
-    chat_ids.remove(update.effective_chat.id)
+    for i in range(0, len(chat_ids)):
+        if chat_ids[i][0] == update.effective_chat.id:
+            chat_ids.remove(chat_ids[i])
+            break
     user_data = context.user_data
     if 'choice' in user_data:
         del user_data['choice']
@@ -219,40 +231,49 @@ def done(update: Update, context: CallbackContext) -> int:
 
 
 def send_alarm_notification(bot):
-    prev_storage_timestamp = ""
-    prev_production_timestamp = ""
+    #prev_storage_timestamp = ""
+    #prev_production_timestamp = ""
     while True:
         storage_alarm = my_sql_connection_select_high_storage()
         production_alarm = my_sql_connection_select_high_production()
         cur_timestamp_stor = storage_alarm[1].strftime('%Y-%m-%d %H:%M:%S')
         cur_timestamp_prod = production_alarm[1].strftime('%Y-%m-%d %H:%M:%S')
         print(chat_ids)
-        for chat_id in chat_ids:
-            if not cur_timestamp_prod == prev_production_timestamp:
+        for i in range(0, len(chat_ids)):
+        #for chat_id in chat_ids:
+            if not cur_timestamp_prod == chat_ids[i][1]:
                 if production_alarm[2] == 'True' or production_alarm[2] == 'true':
                     msg = 'ALLARME IN PRODUZIONE: INCENDIO\n'
                     #production_alarm[1][3] += production_alarm[1][3] + 2
                     msg += 'Orario di rilevamento: ' + production_alarm[1].strftime('%Y-%m-%d %H:%M:%S')
-                    bot.send_message(text=msg, chat_id=chat_id)
+                    bot.send_message(text=msg, chat_id=chat_ids[i][0])
+                    # chat_ids[i][1] = cur_timestamp_prod
+                    new_val = (chat_ids[i][0], cur_timestamp_prod, chat_ids[i][2])
+                    chat_ids[i] = new_val
 
-            if not cur_timestamp_stor == prev_storage_timestamp:
+            if not cur_timestamp_stor == chat_ids[i][2]:
                 if storage_alarm[2] == 'True' or storage_alarm[2] == 'true':
                     msg = 'ALLARME IN STOCCAGGIO: INCENDIO\n'
                     #storage_alarm[1][3] += storage_alarm[1][3] + 2
                     msg += 'Orario di rilevamento: ' + storage_alarm[1].strftime('%Y-%m-%d %H:%M:%S')
-                    bot.send_message(text=msg, chat_id=chat_id)
+                    bot.send_message(text=msg, chat_id=chat_ids[i][0])
+                    # chat_ids[i][2] = cur_timestamp_stor
+                    new_val = (chat_ids[i][0], chat_ids[i][1], cur_timestamp_stor)
+                    chat_ids[i] = new_val
 
                 if storage_alarm[3] == 'True' or storage_alarm[3] == 'true':
                     msg = 'ALLARME IN STOCCAGGIO: INTRUSO\n'
                     #storage_alarm[1][3] += production_alarm[1][3] + 2
                     msg += 'Orario di rilevamento: ' + storage_alarm[1].strftime('%Y-%m-%d %H:%M:%S')
-                    bot.send_message(text=msg, chat_id=chat_id)
+                    bot.send_message(text=msg, chat_id=chat_ids[i][0])
+                    new_val = (chat_ids[i][0], chat_ids[i][1], cur_timestamp_stor)
+                    chat_ids[i] = new_val
 
             # bot.send_message(text='studia artemisia', chat_id=chat_id)
-        if not chat_ids == []:
-            prev_production_timestamp = cur_timestamp_prod
-            prev_storage_timestamp = cur_timestamp_stor
-        sleep(10)
+        #if not chat_ids == []:
+            #prev_production_timestamp = cur_timestamp_prod
+            #prev_storage_timestamp = cur_timestamp_stor
+        sleep(3)
 
 
 def main() -> None:
@@ -272,6 +293,7 @@ def main() -> None:
                 MessageHandler(Filters.regex('^(Temperatura nello Stoccaggio)$'), temp),
                 MessageHandler(Filters.regex('^(Umidità nello Stoccaggio)$'), hum),
                 MessageHandler(Filters.regex('^(Gabriele)$'), pera),
+                MessageHandler(Filters.regex('^(Artemisia)$'), arte),
                 MessageHandler(Filters.regex('^(Termina)$'), done),
                 # MessageHandler(Filters.regex('None'), send_alarm_notification)
             ]

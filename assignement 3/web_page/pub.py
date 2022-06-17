@@ -11,6 +11,9 @@ from flask import Flask, render_template, request
 import re
 import json, requests
 from flask_mysqldb import MySQL
+
+#from bot import main
+
 from telegram import update
 
 app = Flask(__name__)
@@ -50,6 +53,8 @@ BASE_URL = "https://api.openweathermap.org/data/2.5/weather?"
 CITY = "Massa"
 API_KEY = "3864958da0707c963f5bddd1dbd89882"
 URL = BASE_URL + "q=" + CITY + "&appid=" + API_KEY + "&lang=it"
+
+flag_bot = False
 
 import tkinter as tk
 
@@ -151,10 +156,11 @@ def hom_sens():
     incendio_stoc, incendio_stoc_badge = check_incendio(alarm_storage[2])
     intruso_stoc, intruso_stoc_badge = check_intruso(alarm_storage[3])
 
+
     return render_template('home_con_Sensori.html', label1=incendio_prod, badge1=incendio_prod_badge,
                            label2=intruso_stoc, badge2=intruso_stoc_badge, label3=incendio_stoc,
                            badge3=incendio_stoc_badge,
-                           temp_v=storage[2], real_temp_v=float("{0:.2f}".format(float(storage[3]))), hum_v=storage[4],
+                           temp_v=storage[2], real_temp_v=storage[3], hum_v=storage[4],
                            temp_ext=temperature, wind_d=wind, cloud_d=cloud, city=CITY,
                            label_sensore_temp=label_sensore_temp, badge_sensore_temp=badge_sensore_temp,
                            label_sensore_real_temp=label_sensore_real_temp,
@@ -376,5 +382,6 @@ def run():
 
 
 if __name__ == '__main__':
-    # run()
-    app.run(debug=True, host='127.0.0.1')
+    # bot main
+    #main()
+    app.run(debug=False, host='127.0.0.1')

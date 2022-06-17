@@ -9,10 +9,10 @@
 #define WEATHER_API_KEY "3864958da0707c963f5bddd1dbd89882"
 
 // WiFi configuration
-//#define SECRET_SSID "IoTLabThingsU14"                  // SSID
-//#define SECRET_PASS "L@b%I0T*Ui4!P@sS**0%Lessons!"              // WiFi password
-#define SECRET_SSID "My Galaxy"
-#define SECRET_PASS "12345678"  
+#define SECRET_SSID "IoTLabThingsU14"                  // SSID
+#define SECRET_PASS "L@b%I0T*Ui4!P@sS**0%Lessons!"              // WiFi password
+//#define SECRET_SSID "My Galaxy"
+//#define SECRET_PASS "12345678"  
 
 // ONLY if static configuration is needed
 /*
