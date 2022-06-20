@@ -50,8 +50,6 @@ reply_keyboard = [
     ['Previsioni del tempo'],
     ['Temperatura nello Stoccaggio'],
     ['Umidità nello Stoccaggio'],
-    ['Gabriele'],
-    ['Artemisia'],
     ['Termina']
 ]
 markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=False)
@@ -112,9 +110,10 @@ def start(update: Update, context: CallbackContext) -> int:
     update.message.reply_text(
         'Da questo momento riceverai tutti gli allarmi della vigna'
         'Puoi chiedermi tramite la tastiera: '
+        '\n\n- di conoscere le previsioni del tempo alla vigna'
         '\n\n- di conoscere la temperatura nello stoccaggio'
         '\n\n- di conoscere l\'umidità nello stoccaggio'
-        '\n\nInviami /cancel per smettere di parlarmi.\n\n',
+        '\n\nOppure terminare il bot\n\n',
         reply_markup=markup,
     )
     id_to_store = update.effective_chat.id
@@ -145,7 +144,7 @@ def prev(update: Update, _: CallbackContext) -> int:
         'La temperatura a ' + str(CITY) + 'è di ' + str(temperature) + '°C'
                                                                        '\nLa velocità del vento è di ' + str(
             wind) + ' m/s'
-                    '\n La situazione nuvole è ' + str(cloud) + ' ' + icon
+                    '\nLa situazione nuvole è ' + str(cloud) + ' ' + icon
     )
 
     return CHOOSING
@@ -292,8 +291,6 @@ def main() -> None:
                 MessageHandler(Filters.regex('^(Previsioni del tempo)$'), prev),
                 MessageHandler(Filters.regex('^(Temperatura nello Stoccaggio)$'), temp),
                 MessageHandler(Filters.regex('^(Umidità nello Stoccaggio)$'), hum),
-                MessageHandler(Filters.regex('^(Gabriele)$'), pera),
-                MessageHandler(Filters.regex('^(Artemisia)$'), arte),
                 MessageHandler(Filters.regex('^(Termina)$'), done),
                 # MessageHandler(Filters.regex('None'), send_alarm_notification)
             ]
