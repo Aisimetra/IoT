@@ -111,8 +111,8 @@ def start(update: Update, context: CallbackContext) -> int:
         'Da questo momento riceverai tutti gli allarmi della vigna'
         'Puoi chiedermi tramite la tastiera: '
         '\n\n- di conoscere le previsioni del tempo alla vigna'
-        '\n\n- di conoscere la temperatura nello stoccaggio'
-        '\n\n- di conoscere l\'umidità nello stoccaggio'
+        '\n\n- di conoscere la temperatura nella produzione'
+        '\n\n- di conoscere l\'umidità nella produzione'
         '\n\nOppure terminare il bot\n\n',
         reply_markup=markup,
     )
